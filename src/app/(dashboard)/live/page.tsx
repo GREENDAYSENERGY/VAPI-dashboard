@@ -7,9 +7,9 @@ export default function LivePage() {
       <div
         className="text-center px-8 py-12 max-w-md"
         style={{
-          background: "linear-gradient(135deg, var(--accent-deep) 0%, #0563a8 100%)",
-          borderRadius: "var(--g-radius-md)",
-          boxShadow: "var(--shadow-lg)",
+          background: "linear-gradient(135deg, #0a4a73 0%, #0563a8 100%)",
+          borderRadius: "10px",
+          boxShadow: "0 12px 32px rgba(10,74,115,0.22), 0 4px 8px rgba(10,74,115,0.10)",
         }}
       >
         <div

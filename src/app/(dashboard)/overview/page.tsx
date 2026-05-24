@@ -5,14 +5,7 @@ import { CallsPerDayChart } from "@/components/CallsPerDayChart";
 import { OutcomesChart } from "@/components/OutcomesChart";
 import { HourlyHeatmap } from "@/components/HourlyHeatmap";
 import { OverviewActivitySection } from "@/components/OverviewActivitySection";
-import {
-  Phone,
-  Percent,
-  CalendarCheck,
-  Clock,
-  Activity,
-  Radio,
-} from "lucide-react";
+import { Phone, Percent, CalendarCheck, Clock } from "lucide-react";
 import { subDays, format } from "date-fns";
 
 export const dynamic = "force-dynamic";
@@ -133,16 +126,16 @@ export default async function OverviewPage() {
   const maxDisp = Math.max(...Object.values(dispCounts), 1);
 
   return (
-    <div style={{ padding: "var(--card-p)", maxWidth: 1280 }} className="space-y-5">
+    <div style={{ padding: "var(--card-p)" }} className="space-y-5">
 
       {/* ── Hero band ─────────────────────────────────────────────────────── */}
       <div
         className="relative overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, var(--accent-deep) 0%, #0563a8 100%)",
-          borderRadius: "var(--g-radius-md)",
+          background: "linear-gradient(135deg, #0a4a73 0%, #0563a8 100%)",
+          borderRadius: "10px",
           padding: "28px 32px",
-          boxShadow: "var(--shadow-md)",
+          boxShadow: "0 4px 12px rgba(10,74,115,0.18), 0 2px 4px rgba(10,74,115,0.08)",
         }}
       >
         {/* Watermark */}
@@ -160,18 +153,16 @@ export default async function OverviewPage() {
           }}
         />
 
-        <div className="flex items-start justify-between gap-6 flex-wrap">
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 24, flexWrap: "wrap" }}>
           {/* Left: greeting */}
-          <div>
+          <div style={{ minWidth: 220 }}>
             <p
-              className="font-semibold uppercase tracking-widest"
-              style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", marginBottom: 6 }}
+              style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)", marginBottom: 6 }}
             >
               Operations · Go Green Builders
             </p>
             <h1
-              className="font-semibold"
-              style={{ fontSize: 26, color: "#fff", lineHeight: 1.2, fontFamily: "var(--font-sans)" }}
+              style={{ fontSize: 24, fontWeight: 600, color: "#fff", lineHeight: 1.2, fontFamily: "var(--font-sans)", margin: 0 }}
             >
               Good {now.getHours() < 12 ? "morning" : now.getHours() < 17 ? "afternoon" : "evening"} 👋
             </h1>
@@ -181,18 +172,15 @@ export default async function OverviewPage() {
           </div>
 
           {/* Right: hero stats */}
-          <div className="flex gap-5 flex-wrap">
+          <div style={{ display: "flex", gap: 28, flexShrink: 0 }}>
             {[
-              { label: "Live now", value: "0", icon: <Radio size={16} /> },
-              { label: "Queued", value: "0", icon: <Activity size={16} /> },
-              { label: "Today spend", value: `$${todaySpend.toFixed(2)}`, icon: null },
+              { label: "Live now",    value: "0",                           icon: "●" },
+              { label: "Queued",      value: "0",                           icon: null },
+              { label: "Today spend", value: `$${todaySpend.toFixed(2)}`,   icon: null },
             ].map(({ label, value, icon }) => (
-              <div key={label} className="text-center">
-                <div
-                  className="flex items-center justify-center gap-1 font-semibold tabular-nums"
-                  style={{ fontSize: 24, color: "#fff", lineHeight: 1 }}
-                >
-                  {icon && <span style={{ opacity: 0.7 }}>{icon}</span>}
+              <div key={label} style={{ textAlign: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 22, fontWeight: 700, color: "#fff", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                  {icon && <span style={{ fontSize: 10, color: "#4ade80", lineHeight: 1 }}>{icon}</span>}
                   {value}
                 </div>
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", marginTop: 4 }}>{label}</div>
