@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LogOut, BarChart2, DollarSign, Phone } from "lucide-react";
+import { LogOut, BarChart2, Brain } from "lucide-react";
 
 export default async function DashboardLayout({
   children,
@@ -10,6 +10,8 @@ export default async function DashboardLayout({
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
+
+  const isGadiUser = session.email.endsWith("@gadi.ai");
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -25,7 +27,7 @@ export default async function DashboardLayout({
           </div>
           <div className="leading-tight min-w-0">
             <p className="text-xs font-semibold text-gray-900 truncate">Go Green Builders</p>
-            <p className="text-[10px] text-gray-400">VAPI Dashboard</p>
+            <p className="text-[10px] text-gray-400">AI Dashboard</p>
           </div>
         </div>
 
@@ -34,9 +36,11 @@ export default async function DashboardLayout({
           <NavLink href="/dashboard" icon={<BarChart2 className="w-4 h-4" />}>
             Dashboard
           </NavLink>
-          <NavLink href="/pricing" icon={<DollarSign className="w-4 h-4" />}>
-            Pricing
-          </NavLink>
+          {isGadiUser && (
+            <NavLink href="/pricing" icon={<Brain className="w-4 h-4" />}>
+              Big Brain
+            </NavLink>
+          )}
         </nav>
 
         {/* Bottom */}

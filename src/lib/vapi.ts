@@ -1,22 +1,62 @@
 const VAPI_BASE = "https://api.vapi.ai";
 
+export interface VapiMessage {
+  role: "assistant" | "user" | "bot" | "system" | "tool_calls" | "tool_call_result";
+  message?: string;
+  content?: string;
+  secondsFromStart?: number;
+  time?: number;
+  duration?: number;
+  endTime?: number;
+  source?: string;
+}
+
 export interface VapiCall {
   id: string;
-  status: string;
+  assistantId?: string;
+  type?: string; // "webCall" | "inboundPhoneCall" | "outboundPhoneCall"
+  status?: string;
   endedReason?: string;
+
   createdAt: string;
   startedAt?: string;
   endedAt?: string;
+  updatedAt?: string;
+
+  // Cost
   cost?: number;
-  costBreakdown?: Record<string, number>;
-  durationSeconds?: number;
-  type?: string;
-  phoneNumberId?: string;
-  assistantId?: string;
+  costBreakdown?: {
+    transport?: number;
+    stt?: number;
+    llm?: number;
+    tts?: number;
+    vapi?: number;
+    total?: number;
+    llmPromptTokens?: number;
+    llmCompletionTokens?: number;
+    ttsCharacters?: number;
+  };
+
+  // Transcript (top-level plain text)
+  transcript?: string;
+
+  // Recording URLs (top-level shortcuts)
+  recordingUrl?: string;
+  stereoRecordingUrl?: string;
+
+  // Messages (top-level array)
+  messages?: VapiMessage[];
+
+  // Customer info (populated for phone calls, empty for web calls)
   customer?: {
     number?: string;
     name?: string;
-  };
+  } | string;
+
+  // Phone number info
+  phoneNumber?: string | { number?: string; name?: string };
+
+  // Analysis (may be empty)
   analysis?: {
     summary?: string;
     successEvaluation?: string;
@@ -26,20 +66,103 @@ export interface VapiCall {
       [key: string]: unknown;
     };
   };
+
+  // Artifact (mirrors top-level fields + structured recording URLs)
   artifact?: {
     transcript?: string;
     recordingUrl?: string;
     stereoRecordingUrl?: string;
-    messages?: Array<{
-      role: "assistant" | "user" | "system" | "tool";
-      message?: string;
-      content?: string;
-      time?: number;
-      endTime?: number;
-      secondsFromStart?: number;
-    }>;
+    recording?: {
+      stereoUrl?: string;
+      mono?: {
+        combinedUrl?: string;
+        assistantUrl?: string;
+        customerUrl?: string;
+      };
+    };
+    messages?: VapiMessage[];
   };
+
+  // Web call
+  webCallUrl?: string;
+
+  // Variable values passed to the assistant (name, phone, address, city)
+  assistantOverrides?: {
+    variableValues?: {
+      name?: string;
+      phone?: string;
+      address?: string;
+      city?: string;
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  };
+
+  // Legacy / not always populated
+  durationSeconds?: number;
+  summary?: string;
+  metadata?: string;
 }
+
+/** Calculate duration in seconds from startedAt / endedAt */
+export function getCallDuration(call: VapiCall): number {
+  if (call.durationSeconds) return call.durationSeconds;
+  if (call.startedAt && call.endedAt) {
+    return Math.round(
+      (new Date(call.endedAt).getTime() - new Date(call.startedAt).getTime()) / 1000
+    );
+  }
+  return 0;
+}
+
+/** Get customer display name — works for phone calls and web calls */
+export function getCustomerName(call: VapiCall): string {
+  // Variable values passed to assistant (e.g. {{name}})
+  const vars = call.assistantOverrides?.variableValues;
+  if (vars?.name) return vars.name;
+
+  // Phone call customer object
+  if (call.customer && typeof call.customer === "object") {
+    return call.customer.name ?? call.customer.number ?? "—";
+  }
+
+  return "Web Call";
+}
+
+/** Get customer phone number */
+export function getCustomerPhone(call: VapiCall): string {
+  const vars = call.assistantOverrides?.variableValues;
+  if (vars?.phone) return String(vars.phone);
+  if (call.customer && typeof call.customer === "object") {
+    return call.customer.number ?? "—";
+  }
+  return "—";
+}
+
+/** Get the plain-text transcript regardless of where VAPI puts it */
+export function getTranscript(call: VapiCall): string {
+  return call.transcript ?? call.artifact?.transcript ?? "";
+}
+
+/** Get messages array */
+export function getMessages(call: VapiCall): VapiMessage[] {
+  return (
+    call.messages?.filter((m) => m.role === "user" || m.role === "bot" || m.role === "assistant") ??
+    call.artifact?.messages?.filter((m) => m.role === "user" || m.role === "bot" || m.role === "assistant") ??
+    []
+  );
+}
+
+/** Get best recording URL */
+export function getRecordingUrl(call: VapiCall): string | undefined {
+  return (
+    call.artifact?.recording?.mono?.combinedUrl ??
+    call.recordingUrl ??
+    call.artifact?.recordingUrl
+  );
+}
+
+// ─── API Client ───────────────────────────────────────────────────────────────
 
 interface GetCallsParams {
   createdAtGt?: string;
@@ -83,7 +206,6 @@ export async function getCalls(params: GetCallsParams = {}): Promise<VapiCall[]>
   }
 
   const data = await res.json();
-  // VAPI returns array directly or { calls: [...] }
   return Array.isArray(data) ? data : (data.calls ?? data.data ?? []);
 }
 
@@ -92,7 +214,6 @@ export async function getCall(id: string): Promise<VapiCall | null> {
     headers: vapiHeaders(),
     cache: "no-store",
   });
-
   if (!res.ok) return null;
   return res.json();
 }

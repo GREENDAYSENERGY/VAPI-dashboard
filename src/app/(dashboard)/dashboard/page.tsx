@@ -6,46 +6,37 @@ import { CallsTable } from "@/components/CallsTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Suspense } from "react";
 
-// Allow dynamic behaviour for search params
 export const dynamic = "force-dynamic";
 
 interface Props {
-  searchParams: Promise<{
-    from?: string;
-    to?: string;
-  }>;
+  searchParams: Promise<{ from?: string; to?: string }>;
 }
 
 export default async function DashboardPage({ searchParams }: Props) {
   const params = await searchParams;
+
   const calls = await getCalls({
     createdAtGt: params.from,
     createdAtLt: params.to,
+    assistantId: process.env.VAPI_ASSISTANT_ID || undefined,
     limit: 1000,
   });
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {calls.length.toLocaleString()} calls loaded
-          </p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-sm text-gray-500 mt-0.5">
+          {calls.length.toLocaleString()} calls loaded
+        </p>
       </div>
 
-      {/* Stats */}
       <StatsCards calls={calls} />
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-gray-700">
-              Call Dispositions
-            </CardTitle>
+            <CardTitle className="text-sm font-semibold text-gray-700">Call Dispositions</CardTitle>
           </CardHeader>
           <CardContent>
             <OutcomesChart calls={calls} />
@@ -54,9 +45,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-gray-700">
-              Calls per Day
-            </CardTitle>
+            <CardTitle className="text-sm font-semibold text-gray-700">Calls per Day</CardTitle>
           </CardHeader>
           <CardContent>
             <CallsPerDayChart calls={calls} />
@@ -64,12 +53,9 @@ export default async function DashboardPage({ searchParams }: Props) {
         </Card>
       </div>
 
-      {/* Calls Table */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold text-gray-700">
-            All Calls
-          </CardTitle>
+          <CardTitle className="text-sm font-semibold text-gray-700">All Calls</CardTitle>
         </CardHeader>
         <CardContent>
           <Suspense fallback={<div className="text-sm text-gray-400">Loading…</div>}>

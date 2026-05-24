@@ -1,25 +1,18 @@
 import { Card, CardContent } from "@/components/ui/card";
 import type { VapiCall } from "@/lib/vapi";
+import { getCallDuration } from "@/lib/vapi";
 import { Phone, PhoneCall, Calendar, DollarSign } from "lucide-react";
 
 interface Props {
   calls: VapiCall[];
 }
 
-const NO_CONNECT_REASONS = [
-  "no-answer",
-  "voicemail",
-  "busy",
-  "failed",
-  "machine-detected-greeting",
-  "machine-detected-beep",
-  "machine-end-beep",
-  "machine-end-silence",
-];
+const CONNECTED_REASONS = ["customer-ended-call", "assistant-ended-call", "assistant-forwarded-call"];
 
 function isConnected(call: VapiCall) {
-  if (!call.endedReason) return false;
-  return !NO_CONNECT_REASONS.some((r) => call.endedReason!.toLowerCase().includes(r));
+  if (call.endedReason && CONNECTED_REASONS.includes(call.endedReason)) return true;
+  // Fallback: calls longer than 10s were likely connected
+  return getCallDuration(call) > 10;
 }
 
 function isBooked(call: VapiCall) {
@@ -31,6 +24,7 @@ export function StatsCards({ calls }: Props) {
   const connected = calls.filter(isConnected).length;
   const booked = calls.filter(isBooked).length;
   const totalCost = calls.reduce((acc, c) => acc + (c.cost ?? 0), 0);
+  const totalMinutes = calls.reduce((acc, c) => acc + getCallDuration(c), 0) / 60;
 
   const stats = [
     {
@@ -39,6 +33,7 @@ export function StatsCards({ calls }: Props) {
       icon: <Phone className="w-5 h-5" />,
       color: "text-blue-600",
       bg: "bg-blue-50",
+      sub: `${totalMinutes.toFixed(0)} min total`,
     },
     {
       label: "Connected Calls",
@@ -57,7 +52,7 @@ export function StatsCards({ calls }: Props) {
       sub: connected ? `${Math.round((booked / connected) * 100)}% of connected` : undefined,
     },
     {
-      label: "Total VAPI Cost",
+      label: "Total AI Cost",
       value: `$${totalCost.toFixed(2)}`,
       icon: <DollarSign className="w-5 h-5" />,
       color: "text-orange-600",

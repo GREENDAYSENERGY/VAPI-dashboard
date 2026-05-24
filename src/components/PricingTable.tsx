@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { useState, useMemo } from "react";
 import type { VapiCall } from "@/lib/vapi";
+import { getCustomerName, getCallDuration } from "@/lib/vapi";
 import { calcCost, calcBlocks, formatDuration } from "@/lib/pricing";
 import { format, parseISO } from "date-fns";
 import { ArrowUpDown } from "lucide-react";
@@ -36,7 +37,7 @@ export function PricingTable({ calls }: Props) {
       {
         id: "customer",
         header: "Customer",
-        accessorFn: (r) => r.customer?.name ?? r.customer?.number ?? "Unknown",
+        accessorFn: (r) => getCustomerName(r),
         cell: ({ getValue }) => (
           <span className="font-medium">{getValue<string>()}</span>
         ),
@@ -72,7 +73,7 @@ export function PricingTable({ calls }: Props) {
       {
         id: "blocks",
         header: "15s Blocks",
-        accessorFn: (r) => calcBlocks(r.durationSeconds ?? 0),
+        accessorFn: (r) => calcBlocks(getCallDuration(r)),
         cell: ({ getValue }) => (
           <span className="font-mono text-sm text-gray-600">
             {getValue<number>()} × 15s
@@ -86,7 +87,7 @@ export function PricingTable({ calls }: Props) {
             Calc. Revenue <ArrowUpDown className="w-3 h-3" />
           </button>
         ),
-        accessorFn: (r) => calcCost(r.durationSeconds ?? 0),
+        accessorFn: (r) => calcCost(getCallDuration(r)),
         cell: ({ getValue }) => (
           <span className="font-mono font-semibold text-green-700">
             ${getValue<number>().toFixed(2)}
@@ -97,7 +98,7 @@ export function PricingTable({ calls }: Props) {
         id: "vapiCost",
         header: ({ column }) => (
           <button className="flex items-center gap-1" onClick={() => column.toggleSorting()}>
-            VAPI Cost <ArrowUpDown className="w-3 h-3" />
+            AI Cost <ArrowUpDown className="w-3 h-3" />
           </button>
         ),
         accessorFn: (r) => r.cost ?? 0,
@@ -111,7 +112,7 @@ export function PricingTable({ calls }: Props) {
         id: "margin",
         header: "Gross Margin",
         accessorFn: (r) =>
-          calcCost(r.durationSeconds ?? 0) - (r.cost ?? 0),
+          calcCost(getCallDuration(r)) - (r.cost ?? 0),
         cell: ({ getValue }) => {
           const m = getValue<number>();
           return (

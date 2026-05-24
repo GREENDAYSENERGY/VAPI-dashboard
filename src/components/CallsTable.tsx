@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { VapiCall } from "@/lib/vapi";
+import { getCallDuration, getCustomerName, getCustomerPhone } from "@/lib/vapi";
 import { formatDuration } from "@/lib/pricing";
 import { format, parseISO } from "date-fns";
 import { CallModal } from "./CallModal";
@@ -46,7 +47,8 @@ function getDisp(call: VapiCall) {
   const r = (call.endedReason ?? "").toLowerCase();
   if (r.includes("voicemail") || r.includes("machine")) return "VM";
   if (r.includes("no-answer") || r.includes("busy")) return "NO ANSWER";
-  return "—";
+  if (r.includes("customer-ended") || r.includes("assistant-ended")) return "COMPLETED";
+  return call.endedReason ?? "—";
 }
 
 export function CallsTable({ calls }: Props) {
@@ -61,8 +63,7 @@ export function CallsTable({ calls }: Props) {
       {
         id: "customer",
         header: "Customer",
-        accessorFn: (r) =>
-          r.customer?.name ?? r.customer?.number ?? "Unknown",
+        accessorFn: (r) => getCustomerName(r),
         cell: ({ getValue }) => (
           <span className="font-medium text-gray-900">{getValue<string>()}</span>
         ),
@@ -70,7 +71,7 @@ export function CallsTable({ calls }: Props) {
       {
         id: "phone",
         header: "Phone",
-        accessorFn: (r) => r.customer?.number ?? "—",
+        accessorFn: (r) => getCustomerPhone(r),
         cell: ({ getValue }) => (
           <span className="text-sm text-gray-500 font-mono">{getValue<string>()}</span>
         ),
@@ -109,7 +110,7 @@ export function CallsTable({ calls }: Props) {
             Duration <ArrowUpDown className="w-3 h-3" />
           </button>
         ),
-        accessorFn: (r) => r.durationSeconds ?? 0,
+        accessorFn: (r) => getCallDuration(r),
         cell: ({ getValue }) => (
           <span className="text-sm font-mono">
             {formatDuration(getValue<number>())}
@@ -146,7 +147,7 @@ export function CallsTable({ calls }: Props) {
             className="flex items-center gap-1 text-xs font-medium"
             onClick={() => column.toggleSorting()}
           >
-            VAPI Cost <ArrowUpDown className="w-3 h-3" />
+            AI Cost <ArrowUpDown className="w-3 h-3" />
           </button>
         ),
         accessorFn: (r) => r.cost ?? 0,
@@ -189,14 +190,14 @@ export function CallsTable({ calls }: Props) {
 
   function exportCsv() {
     const rows = table.getFilteredRowModel().rows;
-    const headers = ["Customer", "Phone", "Date", "Duration", "Disposition", "Booked", "VAPI Cost"];
+    const headers = ["Customer", "Phone", "Date", "Duration", "Disposition", "Booked", "AI Cost"];
     const lines = rows.map((r) => {
       const c = r.original;
       return [
-        c.customer?.name ?? c.customer?.number ?? "",
-        c.customer?.number ?? "",
+        getCustomerName(c),
+        getCustomerPhone(c),
         c.createdAt ? format(parseISO(c.createdAt), "yyyy-MM-dd HH:mm") : "",
-        formatDuration(c.durationSeconds ?? 0),
+        formatDuration(getCallDuration(c)),
         getDisp(c),
         c.analysis?.structuredData?.appointment_booked ? "Yes" : "No",
         `$${(c.cost ?? 0).toFixed(4)}`,

@@ -18,8 +18,15 @@ export async function loginAction(_state: any, formData: FormData) {
     return { error: "Invalid email or password" };
   }
 
-  // Validate password against bcrypt hash
-  const valid = await compare(password, envHash);
+  // Support both plain-text and bcrypt passwords:
+  // - If AUTH_PASSWORD starts with $2, treat as bcrypt hash
+  // - Otherwise compare as plain text (simpler setup for internal tools)
+  let valid = false;
+  if (envHash.startsWith("$2")) {
+    valid = await compare(password, envHash);
+  } else {
+    valid = password === envHash;
+  }
   if (!valid) {
     return { error: "Invalid email or password" };
   }

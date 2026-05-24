@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { VapiCall } from "@/lib/vapi";
+import { getCallDuration, getCustomerName, getCustomerPhone, getTranscript, getMessages, getRecordingUrl } from "@/lib/vapi";
 import { formatDuration } from "@/lib/pricing";
 import { format, parseISO } from "date-fns";
 
@@ -39,7 +40,12 @@ export function CallModal({ call, open, onClose }: Props) {
   const colorClass =
     DISPOSITION_COLORS[disposition] ?? DISPOSITION_COLORS.Other;
 
-  const messages = call.artifact?.messages ?? [];
+  const messages = getMessages(call);
+  const transcript = getTranscript(call);
+  const recordingUrl = getRecordingUrl(call);
+  const duration = getCallDuration(call);
+  const customerName = getCustomerName(call);
+  const customerPhone = getCustomerPhone(call);
 
   async function handleSaveNote() {
     if (!call) return;
@@ -61,21 +67,22 @@ export function CallModal({ call, open, onClose }: Props) {
       <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
         <SheetHeader className="mb-4">
           <SheetTitle className="flex items-center gap-2">
-            <span>{call.customer?.name ?? call.customer?.number ?? "Unknown"}</span>
-            <Badge className={`text-xs font-medium ${colorClass}`}>
-              {disposition}
-            </Badge>
+            <span>{customerName}</span>
+            {disposition !== "—" && (
+              <Badge className={`text-xs font-medium ${colorClass}`}>{disposition}</Badge>
+            )}
             {call.analysis?.structuredData?.appointment_booked && (
               <Badge className="bg-blue-100 text-blue-800 text-xs">Booked ✓</Badge>
             )}
           </SheetTitle>
           <div className="text-sm text-gray-500 space-y-0.5 mt-1">
-            <p>📞 {call.customer?.number ?? "—"}</p>
+            {customerPhone !== "—" && <p>📞 {customerPhone}</p>}
             <p>
               🕐 {call.createdAt ? format(parseISO(call.createdAt), "PPp") : "—"} ·{" "}
-              ⏱ {formatDuration(call.durationSeconds ?? 0)}
+              ⏱ {formatDuration(duration)}
             </p>
-            <p>💵 VAPI cost: ${(call.cost ?? 0).toFixed(4)}</p>
+            <p>💵 AI cost: ${(call.cost ?? 0).toFixed(4)}</p>
+            <p>📋 {call.endedReason ?? "—"}</p>
           </div>
         </SheetHeader>
 
@@ -90,14 +97,10 @@ export function CallModal({ call, open, onClose }: Props) {
         )}
 
         {/* Recording */}
-        {call.artifact?.recordingUrl && (
+        {recordingUrl && (
           <section className="mb-5">
             <h3 className="text-sm font-semibold text-gray-700 mb-2">🎙 Recording</h3>
-            <audio
-              controls
-              src={call.artifact.recordingUrl}
-              className="w-full rounded-lg"
-            />
+            <audio controls src={recordingUrl} className="w-full rounded-lg" />
           </section>
         )}
 
@@ -107,9 +110,9 @@ export function CallModal({ call, open, onClose }: Props) {
             <h3 className="text-sm font-semibold text-gray-700 mb-2">💬 Transcript</h3>
             <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
               {messages
-                .filter((m) => m.role === "assistant" || m.role === "user")
+                .filter((m) => m.role === "assistant" || m.role === "user" || m.role === "bot")
                 .map((m, i) => {
-                  const isAI = m.role === "assistant";
+                  const isAI = m.role === "assistant" || m.role === "bot";
                   const text = m.message ?? m.content ?? "";
                   if (!text) return null;
                   return (
@@ -137,11 +140,11 @@ export function CallModal({ call, open, onClose }: Props) {
         )}
 
         {/* Plain transcript fallback */}
-        {messages.length === 0 && call.artifact?.transcript && (
+        {messages.length === 0 && transcript && (
           <section className="mb-5">
             <h3 className="text-sm font-semibold text-gray-700 mb-2">💬 Transcript</h3>
             <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap max-h-72 overflow-y-auto">
-              {call.artifact.transcript}
+              {transcript}
             </div>
           </section>
         )}

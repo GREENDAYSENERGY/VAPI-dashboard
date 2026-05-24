@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { callNotes } from "@/db/schema";
-import { eq } from "drizzle-orm";
+
+// In-memory fallback when no DB is configured (notes lost on restart, but everything else works)
+const memoryNotes: Record<string, { note: string; disposition?: string }> = {};
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -16,8 +16,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "callId required" }, { status: 400 });
   }
 
-  // Upsert note
+  if (!process.env.DATABASE_URL) {
+    memoryNotes[callId] = { note, disposition };
+    return NextResponse.json({ ok: true, storage: "memory" });
+  }
+
   try {
+    const { db } = await import("@/lib/db");
+    const { callNotes } = await import("@/db/schema");
     await db
       .insert(callNotes)
       .values({ callId, note, disposition })
@@ -25,10 +31,11 @@ export async function POST(req: NextRequest) {
         target: callNotes.callId,
         set: { note, disposition },
       });
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, storage: "db" });
   } catch (err) {
-    console.error("notes upsert error:", err);
-    return NextResponse.json({ error: "DB error" }, { status: 500 });
+    console.error("notes db error:", err);
+    memoryNotes[callId] = { note, disposition };
+    return NextResponse.json({ ok: true, storage: "memory" });
   }
 }
 
@@ -43,10 +50,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "callId required" }, { status: 400 });
   }
 
-  const notes = await db
-    .select()
-    .from(callNotes)
-    .where(eq(callNotes.callId, callId));
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json(memoryNotes[callId] ?? null);
+  }
 
-  return NextResponse.json(notes[0] ?? null);
+  try {
+    const { db } = await import("@/lib/db");
+    const { callNotes } = await import("@/db/schema");
+    const { eq } = await import("drizzle-orm");
+    const notes = await db
+      .select()
+      .from(callNotes)
+      .where(eq(callNotes.callId, callId));
+    return NextResponse.json(notes[0] ?? null);
+  } catch {
+    return NextResponse.json(memoryNotes[callId] ?? null);
+  }
 }

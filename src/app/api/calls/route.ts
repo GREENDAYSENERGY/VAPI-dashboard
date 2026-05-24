@@ -12,10 +12,14 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const createdAtGt = searchParams.get("createdAtGt") ?? undefined;
   const createdAtLt = searchParams.get("createdAtLt") ?? undefined;
-  const limit = searchParams.get("limit")
-    ? Number(searchParams.get("limit"))
-    : 1000;
+  const limit = searchParams.get("limit") ? Number(searchParams.get("limit")) : 1000;
 
-  const calls = await getCalls({ createdAtGt, createdAtLt, limit });
+  const calls = await getCalls({
+    createdAtGt,
+    createdAtLt,
+    limit,
+    assistantId: process.env.VAPI_ASSISTANT_ID || undefined,
+  });
+
   return NextResponse.json(calls);
 }
