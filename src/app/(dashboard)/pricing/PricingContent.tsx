@@ -93,7 +93,7 @@ export default function PricingContent() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">🧠 Big Brain</h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          ${RATE_PER_MINUTE.toFixed(2)} / min · billed in {BLOCK_SECONDS}s increments (${RATE_PER_BLOCK.toFixed(3)} per block)
+          ${RATE_PER_MINUTE.toFixed(2)} / min · billed in {BLOCK_SECONDS}s increments (rounded to nearest block)
         </p>
       </div>
 
@@ -169,7 +169,7 @@ export default function PricingContent() {
           {inputSeconds > 0 && (
             <p className="text-xs text-gray-400 mt-3">
               {inputSeconds}s ÷ {BLOCK_SECONDS}s = {(inputSeconds / BLOCK_SECONDS).toFixed(2)} →{" "}
-              ceil = {calcBlocks_} blocks × ${RATE_PER_BLOCK.toFixed(3)} = ${calcCost_.toFixed(2)}
+              round = {calcBlocks_} blocks × ${RATE_PER_BLOCK.toFixed(3)} = ${calcCost_.toFixed(2)}
             </p>
           )}
         </CardContent>

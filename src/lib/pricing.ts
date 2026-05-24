@@ -6,18 +6,18 @@ export const RATE_PER_BLOCK = RATE_PER_MINUTE / (60 / BLOCK_SECONDS); // 0.125
 
 /**
  * Calculate client billing cost for a call.
- * Every partial 15-second block is rounded up.
- * e.g., 47s → ceil(47/15) = 4 blocks × $0.125 = $0.50
+ * 15-second blocks are rounded to nearest.
+ * e.g., 47s → round(47/15) = 3 blocks × $0.125 = $0.375
  */
 export function calcCost(durationSeconds: number): number {
   if (!durationSeconds || durationSeconds <= 0) return 0;
-  return Math.ceil(durationSeconds / BLOCK_SECONDS) * RATE_PER_BLOCK;
+  return Math.round(durationSeconds / BLOCK_SECONDS) * RATE_PER_BLOCK;
 }
 
 /** Number of 15-second blocks for a given duration */
 export function calcBlocks(durationSeconds: number): number {
   if (!durationSeconds || durationSeconds <= 0) return 0;
-  return Math.ceil(durationSeconds / BLOCK_SECONDS);
+  return Math.round(durationSeconds / BLOCK_SECONDS);
 }
 
 /** Format seconds to m:ss */
