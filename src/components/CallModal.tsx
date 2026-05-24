@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { VapiCall } from "@/lib/vapi";
 import { getCallDuration, getCustomerName, getCustomerPhone, getTranscript, getMessages, getRecordingUrl } from "@/lib/vapi";
-import { formatDuration } from "@/lib/pricing";
+import { calcCost, formatDuration } from "@/lib/pricing";
 import { format, parseISO } from "date-fns";
 
 interface Props {
@@ -81,7 +81,7 @@ export function CallModal({ call, open, onClose }: Props) {
               🕐 {call.createdAt ? format(parseISO(call.createdAt), "PPp") : "—"} ·{" "}
               ⏱ {formatDuration(duration)}
             </p>
-            <p>💵 AI cost: ${(call.cost ?? 0).toFixed(4)}</p>
+            <p>💵 AI cost: ${calcCost(duration).toFixed(2)}</p>
             <p>📋 {call.endedReason ?? "—"}</p>
           </div>
         </SheetHeader>

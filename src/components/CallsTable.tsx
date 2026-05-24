@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { VapiCall } from "@/lib/vapi";
 import { getCallDuration, getCustomerName, getCustomerPhone } from "@/lib/vapi";
-import { formatDuration } from "@/lib/pricing";
+import { calcCost, formatDuration } from "@/lib/pricing";
 import { format, parseISO } from "date-fns";
 import { CallModal } from "./CallModal";
 import { ArrowUpDown, Download, ExternalLink } from "lucide-react";
@@ -150,10 +150,10 @@ export function CallsTable({ calls }: Props) {
             AI Cost <ArrowUpDown className="w-3 h-3" />
           </button>
         ),
-        accessorFn: (r) => r.cost ?? 0,
+        accessorFn: (r) => calcCost(getCallDuration(r)),
         cell: ({ getValue }) => (
           <span className="text-sm font-mono">
-            ${getValue<number>().toFixed(3)}
+            ${getValue<number>().toFixed(2)}
           </span>
         ),
       },
@@ -200,7 +200,7 @@ export function CallsTable({ calls }: Props) {
         formatDuration(getCallDuration(c)),
         getDisp(c),
         c.analysis?.structuredData?.appointment_booked ? "Yes" : "No",
-        `$${(c.cost ?? 0).toFixed(4)}`,
+        `$${calcCost(getCallDuration(c)).toFixed(2)}`,
       ].join(",");
     });
     const csv = [headers.join(","), ...lines].join("\n");

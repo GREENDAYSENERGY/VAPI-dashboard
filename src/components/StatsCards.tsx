@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import type { VapiCall } from "@/lib/vapi";
 import { getCallDuration } from "@/lib/vapi";
+import { calcCost } from "@/lib/pricing";
 import { Phone, PhoneCall, Calendar, DollarSign } from "lucide-react";
 
 interface Props {
@@ -23,7 +24,7 @@ export function StatsCards({ calls }: Props) {
   const total = calls.length;
   const connected = calls.filter(isConnected).length;
   const booked = calls.filter(isBooked).length;
-  const totalCost = calls.reduce((acc, c) => acc + (c.cost ?? 0), 0);
+  const totalCost = calls.reduce((acc, c) => acc + calcCost(getCallDuration(c)), 0);
   const totalMinutes = calls.reduce((acc, c) => acc + getCallDuration(c), 0) / 60;
 
   const stats = [
@@ -57,7 +58,7 @@ export function StatsCards({ calls }: Props) {
       icon: <DollarSign className="w-5 h-5" />,
       color: "text-orange-600",
       bg: "bg-orange-50",
-      sub: total ? `avg $${(totalCost / total).toFixed(3)}/call` : undefined,
+      sub: total ? `avg $${(totalCost / total).toFixed(2)}/call` : undefined,
     },
   ];
 
