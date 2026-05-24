@@ -6,18 +6,16 @@ const SECRET = new TextEncoder().encode(
   process.env.AUTH_SECRET ?? "fallback-secret-change-in-production"
 );
 
-const PROTECTED = ["/dashboard", "/pricing"];
+const PROTECTED = ["/dashboard", "/pricing", "/overview", "/calls", "/analytics", "/live", "/billing"];
 const PUBLIC = ["/login", "/api/auth"];
 
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public paths
   if (PUBLIC.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
-  // Protect dashboard routes
   if (PROTECTED.some((p) => pathname.startsWith(p))) {
     const token = request.cookies.get("vapi_session")?.value;
 
@@ -39,5 +37,14 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/pricing/:path*", "/login"],
+  matcher: [
+    "/dashboard/:path*",
+    "/pricing/:path*",
+    "/overview/:path*",
+    "/calls/:path*",
+    "/analytics/:path*",
+    "/live/:path*",
+    "/billing/:path*",
+    "/login",
+  ],
 };

@@ -123,8 +123,128 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv11", "ss01";
   }
   html {
     @apply font-sans;
   }
+}
+
+/* ============================================================
+   Gadi.ai Design System — Brand + Application Tokens
+   ============================================================ */
+:root {
+  /* Blue scale */
+  --blue-50:  #e6f2fa;
+  --blue-100: #cce5f5;
+  --blue-200: #99cbeb;
+  --blue-300: #66b1e1;
+  --blue-400: #3397d7;
+  --blue-500: #0079c1;
+  --blue-600: #00629c;
+  --blue-700: #0a4a73;
+  --blue-800: #073454;
+  --blue-900: #041f33;
+
+  /* Accent aliases (override shadcn defaults intentionally) */
+  --accent:        #0079c1;
+  --accent-strong: #00629c;
+  --accent-deep:   #0a4a73;
+  --accent-soft:   #e6f2fa;
+  --accent-soft-2: #cce5f5;
+
+  /* App surfaces */
+  --app-bg:        #f6f8fb;
+  --surface:       #ffffff;
+  --surface-2:     #fcfcfc;
+  --surface-3:     #f5f5f5;
+  --surface-inset: #f0f3f7;
+  --line:          #e8e8e8;
+  --line-strong:   #d1d1d1;
+  --line-soft:     #f0f0f0;
+
+  /* Text scale */
+  --text-1: #1a2530;
+  --text-2: #525252;
+  --text-3: #737373;
+  --text-4: #a3a3a3;
+
+  /* Status tokens */
+  --pos:       #16a34a;
+  --pos-soft:  #e8f5ec;
+  --neg:       #dc2626;
+  --neg-soft:  #fbe9e9;
+  --warn:      #d97706;
+  --warn-soft: #fcf0e2;
+
+  /* Shadows (blue-tinted) */
+  --shadow-xs:    0 1px 2px rgba(10,74,115,0.04);
+  --shadow-sm:    0 2px 4px rgba(10,74,115,0.06), 0 1px 2px rgba(10,74,115,0.04);
+  --shadow-md:    0 4px 12px rgba(10,74,115,0.08), 0 2px 4px rgba(10,74,115,0.04);
+  --shadow-lg:    0 12px 32px rgba(10,74,115,0.10), 0 4px 8px rgba(10,74,115,0.06);
+  --shadow-xl:    0 24px 56px rgba(10,74,115,0.14);
+  --shadow-focus: 0 0 0 3px rgba(0,121,193,0.25);
+
+  /* Gadi radius tokens */
+  --g-radius-xs:   4px;
+  --g-radius-sm:   6px;
+  --g-radius-md:   10px;
+  --g-radius-lg:   16px;
+  --g-radius-xl:   24px;
+  --g-radius-pill: 999px;
+
+  /* Density & layout */
+  --row-h:     40px;
+  --cell-py:   10px;
+  --cell-px:   14px;
+  --card-p:    20px;
+  --kpi-num:   30px;
+  --kpi-label: 11px;
+  --gap:       16px;
+  --sidebar-w: 232px;
+  --topbar-h:  56px;
+
+  /* Font stacks */
+  --font-sans:    'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:    ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
+}
+
+/* ── Disposition chip classes ────────────────────────────── */
+.disp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--g-radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  line-height: 1.6;
+}
+.disp-BOOKED    { background: var(--pos-soft);     color: var(--pos); }
+.disp-CB        { background: var(--accent-soft);  color: var(--accent); }
+.disp-VM        { background: var(--warn-soft);    color: var(--warn); }
+.disp-DNC       { background: var(--neg-soft);     color: var(--neg); }
+.disp-NQ        { background: #f1f1f4;             color: #5e6a78; }
+.disp-NO_ANSWER { background: var(--surface-3);    color: var(--text-3); }
+.disp-COMPLETED { background: var(--surface-3);    color: var(--text-2); }
+.disp-OTHER     { background: var(--surface-3);    color: var(--text-3); }
+
+/* ── Keyframes ───────────────────────────────────────────── */
+@keyframes livePulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(22,163,74,0.18); }
+  50%       { box-shadow: 0 0 0 6px rgba(22,163,74,0.05); }
+}
+@keyframes ringPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+@keyframes meterBounce {
+  0%, 100% { transform: scaleY(0.5); }
+  50%       { transform: scaleY(1); }
 }

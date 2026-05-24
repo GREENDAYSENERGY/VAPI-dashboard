@@ -104,6 +104,26 @@ export interface VapiCall {
   metadata?: string;
 }
 
+/**
+ * Get a normalized disposition key for a call.
+ * Returns: BOOKED | CB | VM | DNC | NQ | NO_ANSWER | COMPLETED | OTHER
+ */
+export function getDispositionKey(call: VapiCall): string {
+  const d = call.analysis?.structuredData?.disposition;
+  if (d) {
+    const upper = d.toUpperCase();
+    if (upper === "BOOKED" || call.analysis?.structuredData?.appointment_booked) return "BOOKED";
+    return upper;
+  }
+  if (call.analysis?.structuredData?.appointment_booked) return "BOOKED";
+  const r = (call.endedReason ?? "").toLowerCase();
+  if (r.includes("voicemail") || r.includes("machine")) return "VM";
+  if (r.includes("no-answer") || r.includes("busy")) return "NO_ANSWER";
+  if (r.includes("customer-ended") || r.includes("assistant-ended")) return "COMPLETED";
+  if (r.includes("do-not-call") || r.includes("dnc")) return "DNC";
+  return "OTHER";
+}
+
 /** Calculate duration in seconds from startedAt / endedAt */
 export function getCallDuration(call: VapiCall): number {
   if (call.durationSeconds) return call.durationSeconds;

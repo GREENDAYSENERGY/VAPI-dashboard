@@ -81,7 +81,7 @@ export function CallModal({ call, open, onClose }: Props) {
               🕐 {call.createdAt ? format(parseISO(call.createdAt), "PPp") : "—"} ·{" "}
               ⏱ {formatDuration(duration)}
             </p>
-            <p>💵 AI cost: ${calcCost(duration).toFixed(2)}</p>
+            <p>💵 AI cost: ${calcCost(duration).toFixed(3)}</p>
             <p>📋 {call.endedReason ?? "—"}</p>
           </div>
         </SheetHeader>

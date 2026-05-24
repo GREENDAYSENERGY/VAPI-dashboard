@@ -90,7 +90,7 @@ export function PricingTable({ calls }: Props) {
         accessorFn: (r) => calcCost(getCallDuration(r)),
         cell: ({ getValue }) => (
           <span className="font-mono font-semibold text-green-700">
-            ${getValue<number>().toFixed(2)}
+            ${getValue<number>().toFixed(3)}
           </span>
         ),
       },
@@ -121,7 +121,7 @@ export function PricingTable({ calls }: Props) {
                 m >= 0 ? "text-green-600" : "text-red-500"
               }`}
             >
-              {m >= 0 ? "+" : ""}${m.toFixed(2)}
+              {m >= 0 ? "+" : ""}${m.toFixed(3)}
             </span>
           );
         },

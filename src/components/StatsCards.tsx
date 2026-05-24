@@ -54,11 +54,11 @@ export function StatsCards({ calls }: Props) {
     },
     {
       label: "Total AI Cost",
-      value: `$${totalCost.toFixed(2)}`,
+      value: `$${totalCost.toFixed(3)}`,
       icon: <DollarSign className="w-5 h-5" />,
       color: "text-orange-600",
       bg: "bg-orange-50",
-      sub: total ? `avg $${(totalCost / total).toFixed(2)}/call` : undefined,
+      sub: total ? `avg $${(totalCost / total).toFixed(3)}/call` : undefined,
     },
   ];
 

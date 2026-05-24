@@ -1,76 +1,67 @@
 "use client";
 
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import type { VapiCall } from "@/lib/vapi";
+import { getDispositionKey } from "@/lib/vapi";
 
-interface Props {
-  calls: VapiCall[];
-}
-
-const COLORS: Record<string, string> = {
-  CB: "#22c55e",
-  VM: "#f59e0b",
-  "No Answer": "#94a3b8",
-  DNC: "#ef4444",
-  NQ: "#8b5cf6",
-  Booked: "#0ea5e9",
-  Other: "#6b7280",
+const DISP_COLORS: Record<string, string> = {
+  BOOKED:    "#16a34a",
+  CB:        "#0079c1",
+  VM:        "#d97706",
+  DNC:       "#dc2626",
+  NQ:        "#5e6a78",
+  NO_ANSWER: "#a3a3a3",
+  COMPLETED: "#737373",
+  OTHER:     "#a3a3a3",
 };
 
-function getDisposition(call: VapiCall): string {
-  const d = call.analysis?.structuredData?.disposition;
-  if (d) return d.toUpperCase();
+const DISP_LABEL: Record<string, string> = {
+  BOOKED: "Booked", CB: "Callback", VM: "Voicemail",
+  DNC: "Do-not-call", NQ: "Not qualified", NO_ANSWER: "No answer",
+  COMPLETED: "Completed", OTHER: "Other",
+};
 
-  const reason = (call.endedReason ?? "").toLowerCase();
-  if (reason.includes("voicemail") || reason.includes("machine")) return "VM";
-  if (reason.includes("no-answer") || reason.includes("busy")) return "No Answer";
-  if (call.analysis?.structuredData?.appointment_booked) return "Booked";
-  return "Other";
-}
-
-export function OutcomesChart({ calls }: Props) {
+export function OutcomesChart({ calls }: { calls: VapiCall[] }) {
   const counts: Record<string, number> = {};
-  for (const c of calls) {
-    const d = getDisposition(c);
-    counts[d] = (counts[d] ?? 0) + 1;
-  }
+  for (const c of calls) { const k = getDispositionKey(c); counts[k] = (counts[k] ?? 0) + 1; }
 
   const data = Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .map(([name, value]) => ({ name, value }));
+    .map(([k, v]) => ({ key: k, name: DISP_LABEL[k] ?? k, value: v, color: DISP_COLORS[k] ?? "#a3a3a3" }))
+    .sort((a, b) => b.value - a.value);
+
+  const total = calls.length;
+  const booked = counts["BOOKED"] ?? 0;
+
+  if (data.length === 0) return <div className="flex items-center justify-center h-40 text-sm" style={{ color: "var(--text-4)" }}>No data</div>;
 
   return (
-    <ResponsiveContainer width="100%" height={260}>
-      <PieChart>
-        <Pie
-          data={data}
-          dataKey="value"
-          nameKey="name"
-          cx="50%"
-          cy="50%"
-          outerRadius={90}
-          label={({ name, percent }) =>
-            `${name} ${Math.round((percent ?? 0) * 100)}%`
-          }
-          labelLine={false}
-        >
-          {data.map((entry) => (
-            <Cell
-              key={entry.name}
-              fill={COLORS[entry.name] ?? COLORS.Other}
-            />
-          ))}
-        </Pie>
-        <Tooltip formatter={(v) => [`${v} calls`, ""]} />
-        <Legend />
-      </PieChart>
-    </ResponsiveContainer>
+    <div className="flex items-center gap-6">
+      <div className="relative shrink-0" style={{ width: 160, height: 160 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie data={data} cx="50%" cy="50%" innerRadius={52} outerRadius={74} dataKey="value" strokeWidth={2} stroke="var(--surface)">
+              {data.map(e => <Cell key={e.key} fill={e.color} />)}
+            </Pie>
+            <Tooltip formatter={(v) => [`${v} calls`, ""]} contentStyle={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12 }} />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <p className="font-semibold tabular-nums" style={{ fontSize: 22, color: "var(--text-1)", lineHeight: 1 }}>{booked}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: "var(--text-3)" }}>Booked</p>
+        </div>
+      </div>
+      <div className="flex flex-col gap-2 flex-1 min-w-0">
+        {data.map(e => (
+          <div key={e.key} className="flex items-center gap-2">
+            <span className="shrink-0" style={{ width: 8, height: 8, borderRadius: 2, background: e.color, display: "inline-block" }} />
+            <span className="flex-1 text-[12px] font-medium truncate" style={{ color: "var(--text-1)" }}>{e.name}</span>
+            <span className="text-[12px] font-mono shrink-0" style={{ color: "var(--text-2)" }}>{e.value}</span>
+            <span className="text-[11px] font-mono shrink-0 w-9 text-right" style={{ color: "var(--text-3)" }}>
+              {total > 0 ? Math.round((e.value / total) * 100) : 0}%
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

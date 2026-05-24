@@ -93,7 +93,7 @@ export default function PricingContent() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">🧠 Big Brain</h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          ${RATE_PER_MINUTE.toFixed(2)} / min · billed in {BLOCK_SECONDS}s increments (rounded to nearest block)
+          ${RATE_PER_MINUTE.toFixed(3)} / min · billed in {BLOCK_SECONDS}s increments (rounded to nearest block)
         </p>
       </div>
 
@@ -101,17 +101,17 @@ export default function PricingContent() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryCard
           label="Total Revenue"
-          value={`$${totalRevenue.toFixed(2)}`}
-          sub={`at $${RATE_PER_MINUTE.toFixed(2)} / min`}
+          value={`$${totalRevenue.toFixed(3)}`}
+          sub={`at $${RATE_PER_MINUTE.toFixed(3)} / min`}
         />
         <SummaryCard
           label="AI Cost"
-          value={`$${totalAiCost.toFixed(2)}`}
+          value={`$${totalAiCost.toFixed(3)}`}
           sub="actual spend"
         />
         <SummaryCard
           label="Gross Margin"
-          value={`$${grossMargin.toFixed(2)}`}
+          value={`$${grossMargin.toFixed(3)}`}
           sub={`${totalRevenue > 0 ? Math.round((grossMargin / totalRevenue) * 100) : 0}% margin`}
         />
         <SummaryCard
@@ -160,7 +160,7 @@ export default function PricingContent() {
                 <div className="text-center">
                   <p className="text-xs text-gray-400">Revenue</p>
                   <p className="font-mono font-bold text-green-700 text-lg">
-                    ${calcCost_.toFixed(2)}
+                    ${calcCost_.toFixed(3)}
                   </p>
                 </div>
               </div>
@@ -168,8 +168,8 @@ export default function PricingContent() {
           </div>
           {inputSeconds > 0 && (
             <p className="text-xs text-gray-400 mt-3">
-              {inputSeconds}s ÷ {BLOCK_SECONDS}s = {(inputSeconds / BLOCK_SECONDS).toFixed(2)} →{" "}
-              round = {calcBlocks_} blocks × ${RATE_PER_BLOCK.toFixed(3)} = ${calcCost_.toFixed(2)}
+              {inputSeconds}s ÷ {BLOCK_SECONDS}s = {(inputSeconds / BLOCK_SECONDS).toFixed(3)} →{" "}
+              round = {calcBlocks_} blocks × ${RATE_PER_BLOCK.toFixed(3)} = ${calcCost_.toFixed(3)}
             </p>
           )}
         </CardContent>
@@ -204,13 +204,13 @@ export default function PricingContent() {
                       {formatDuration(stats.duration)}
                     </td>
                     <td className="px-3 py-2 text-right font-mono text-green-700">
-                      ${stats.revenue.toFixed(2)}
+                      ${stats.revenue.toFixed(3)}
                     </td>
                     <td className="px-3 py-2 text-right font-mono text-gray-500">
-                      ${stats.cost.toFixed(2)}
+                      ${stats.cost.toFixed(3)}
                     </td>
                     <td className="px-3 py-2 text-right font-mono font-semibold text-green-600">
-                      +${(stats.revenue - stats.cost).toFixed(2)}
+                      +${(stats.revenue - stats.cost).toFixed(3)}
                     </td>
                   </tr>
                 ))}
@@ -222,13 +222,13 @@ export default function PricingContent() {
                     {formatDuration(totalDuration)}
                   </td>
                   <td className="px-3 py-2 text-right font-mono text-green-700">
-                    ${totalRevenue.toFixed(2)}
+                    ${totalRevenue.toFixed(3)}
                   </td>
                   <td className="px-3 py-2 text-right font-mono text-gray-500">
-                    ${totalAiCost.toFixed(2)}
+                    ${totalAiCost.toFixed(3)}
                   </td>
                   <td className="px-3 py-2 text-right font-mono text-green-600">
-                    +${grossMargin.toFixed(2)}
+                    +${grossMargin.toFixed(3)}
                   </td>
                 </tr>
               </tbody>

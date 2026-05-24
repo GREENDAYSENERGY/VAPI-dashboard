@@ -6,6 +6,7 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   useReactTable,
   type ColumnDef,
   type SortingState,
@@ -18,45 +19,58 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import type { VapiCall } from "@/lib/vapi";
-import { getCallDuration, getCustomerName, getCustomerPhone } from "@/lib/vapi";
+import { getCallDuration, getCustomerName, getCustomerPhone, getDispositionKey } from "@/lib/vapi";
 import { calcCost, formatDuration } from "@/lib/pricing";
 import { format, parseISO } from "date-fns";
-import { CallModal } from "./CallModal";
-import { ArrowUpDown, Download, ExternalLink } from "lucide-react";
+import { CallDetailDrawer } from "./CallDetailDrawer";
+import { CallDispositionChip } from "./DispositionChip";
+import { ChevronRight, Download, ChevronLeft, Search } from "lucide-react";
 
 interface Props {
   calls: VapiCall[];
 }
 
-const DISPOSITION_COLORS: Record<string, string> = {
-  CB: "bg-green-100 text-green-800 border-green-200",
-  VM: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  DNC: "bg-red-100 text-red-800 border-red-200",
-  NQ: "bg-purple-100 text-purple-800 border-purple-200",
-  Booked: "bg-blue-100 text-blue-800 border-blue-200",
-  "NO ANSWER": "bg-gray-100 text-gray-600 border-gray-200",
-};
+const ALL_DISP_KEYS = ["BOOKED", "CB", "VM", "DNC", "NQ", "NO_ANSWER", "COMPLETED", "OTHER"] as const;
 
-function getDisp(call: VapiCall) {
-  const d = call.analysis?.structuredData?.disposition;
-  if (d) return d.toUpperCase();
-  const r = (call.endedReason ?? "").toLowerCase();
-  if (r.includes("voicemail") || r.includes("machine")) return "VM";
-  if (r.includes("no-answer") || r.includes("busy")) return "NO ANSWER";
-  if (r.includes("customer-ended") || r.includes("assistant-ended")) return "COMPLETED";
-  return call.endedReason ?? "—";
-}
+const PAGE_SIZE = 25;
 
 export function CallsTable({ calls }: Props) {
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "createdAt", desc: true },
-  ]);
-  const [globalFilter, setGlobalFilter] = useState("");
+  const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
+  const [search, setSearch] = useState("");
+  const [dispFilter, setDispFilter] = useState<string>("ALL");
+  const [bookedOnly, setBookedOnly] = useState(false);
   const [selectedCall, setSelectedCall] = useState<VapiCall | null>(null);
+  const [page, setPage] = useState(0);
+
+  // Disposition counts
+  const dispCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const c of calls) {
+      const k = getDispositionKey(c);
+      m[k] = (m[k] ?? 0) + 1;
+    }
+    return m;
+  }, [calls]);
+
+  // Keys that actually appear in data
+  const activeKeys = ALL_DISP_KEYS.filter((k) => (dispCounts[k] ?? 0) > 0);
+
+  // Filtered data (pre-table)
+  const filteredCalls = useMemo(() => {
+    let list = calls;
+    if (dispFilter !== "ALL") list = list.filter((c) => getDispositionKey(c) === dispFilter);
+    if (bookedOnly) list = list.filter((c) => c.analysis?.structuredData?.appointment_booked === true);
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter((c) => {
+        const name = getCustomerName(c).toLowerCase();
+        const phone = getCustomerPhone(c).toLowerCase();
+        return name.includes(q) || phone.includes(q);
+      });
+    }
+    return list;
+  }, [calls, dispFilter, bookedOnly, search]);
 
   const columns: ColumnDef<VapiCall>[] = useMemo(
     () => [
@@ -64,112 +78,90 @@ export function CallsTable({ calls }: Props) {
         id: "customer",
         header: "Customer",
         accessorFn: (r) => getCustomerName(r),
-        cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">{getValue<string>()}</span>
-        ),
+        cell: ({ row }) => {
+          const name = getCustomerName(row.original);
+          const phone = getCustomerPhone(row.original);
+          const initials = name.replace("Web Call", "WC").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+          return (
+            <div className="flex items-center gap-2">
+              <div
+                className="shrink-0 flex items-center justify-center rounded-full font-semibold"
+                style={{
+                  width: 28,
+                  height: 28,
+                  background: "var(--accent-soft-2)",
+                  color: "var(--accent-deep)",
+                  fontSize: 10,
+                }}
+              >
+                {initials || "?"}
+              </div>
+              <div>
+                <p className="font-medium leading-tight" style={{ fontSize: 13, color: "var(--text-1)" }}>
+                  {name}
+                </p>
+                {phone !== "—" && (
+                  <p className="font-mono leading-tight" style={{ fontSize: 11, color: "var(--text-4)" }}>
+                    {phone}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        },
       },
       {
-        id: "phone",
-        header: "Phone",
-        accessorFn: (r) => getCustomerPhone(r),
-        cell: ({ getValue }) => (
-          <span className="text-sm text-gray-500 font-mono">{getValue<string>()}</span>
-        ),
+        id: "disposition",
+        header: "Outcome",
+        accessorFn: (r) => getDispositionKey(r),
+        cell: ({ row }) => <CallDispositionChip call={row.original} />,
       },
       {
         id: "createdAt",
-        header: ({ column }) => (
-          <button
-            className="flex items-center gap-1 text-xs font-medium"
-            onClick={() => column.toggleSorting()}
-          >
-            Date <ArrowUpDown className="w-3 h-3" />
-          </button>
-        ),
+        header: "Date",
         accessorFn: (r) => r.createdAt,
         cell: ({ getValue }) => {
           try {
+            const d = parseISO(getValue<string>());
             return (
-              <span className="text-sm text-gray-500">
-                {format(parseISO(getValue<string>()), "MMM d, p")}
-              </span>
+              <div>
+                <p style={{ fontSize: 12, color: "var(--text-1)" }}>{format(d, "MMM d, yyyy")}</p>
+                <p className="font-mono" style={{ fontSize: 11, color: "var(--text-4)" }}>{format(d, "p")}</p>
+              </div>
             );
           } catch {
-            return <span className="text-gray-400">—</span>;
+            return <span style={{ color: "var(--text-4)" }}>—</span>;
           }
         },
         sortingFn: "datetime",
       },
       {
         id: "duration",
-        header: ({ column }) => (
-          <button
-            className="flex items-center gap-1 text-xs font-medium"
-            onClick={() => column.toggleSorting()}
-          >
-            Duration <ArrowUpDown className="w-3 h-3" />
-          </button>
-        ),
+        header: "Duration",
         accessorFn: (r) => getCallDuration(r),
         cell: ({ getValue }) => (
-          <span className="text-sm font-mono">
+          <span className="font-mono" style={{ fontSize: 12, color: "var(--text-2)" }}>
             {formatDuration(getValue<number>())}
           </span>
         ),
       },
       {
-        id: "disposition",
-        header: "Disposition",
-        accessorFn: (r) => getDisp(r),
-        cell: ({ getValue }) => {
-          const d = getValue<string>();
-          const cls = DISPOSITION_COLORS[d] ?? "bg-gray-100 text-gray-600 border-gray-200";
-          return (
-            <Badge className={`text-xs border ${cls}`}>{d}</Badge>
-          );
-        },
-      },
-      {
-        id: "booked",
-        header: "Booked",
-        accessorFn: (r) => r.analysis?.structuredData?.appointment_booked,
-        cell: ({ getValue }) =>
-          getValue() ? (
-            <span className="text-green-600 font-semibold text-sm">✓</span>
-          ) : (
-            <span className="text-gray-300 text-sm">—</span>
-          ),
-      },
-      {
         id: "cost",
-        header: ({ column }) => (
-          <button
-            className="flex items-center gap-1 text-xs font-medium"
-            onClick={() => column.toggleSorting()}
-          >
-            AI Cost <ArrowUpDown className="w-3 h-3" />
-          </button>
-        ),
+        header: "AI Cost",
         accessorFn: (r) => calcCost(getCallDuration(r)),
         cell: ({ getValue }) => (
-          <span className="text-sm font-mono">
-            ${getValue<number>().toFixed(2)}
+          <span className="font-mono" style={{ fontSize: 12, color: "var(--text-2)" }}>
+            ${getValue<number>().toFixed(3)}
           </span>
         ),
       },
       {
         id: "actions",
         header: "",
-        cell: ({ row }) => (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 text-xs"
-            onClick={() => setSelectedCall(row.original)}
-          >
-            <ExternalLink className="w-3 h-3 mr-1" />
-            View
-          </Button>
+        cell: () => (
+          <span style={{ color: "var(--text-4)" }}>
+            <ChevronRight size={16} />
+          </span>
         ),
         enableSorting: false,
       },
@@ -178,69 +170,147 @@ export function CallsTable({ calls }: Props) {
   );
 
   const table = useReactTable({
-    data: calls,
+    data: filteredCalls,
     columns,
-    state: { sorting, globalFilter },
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
+    state: { sorting, pagination: { pageIndex: page, pageSize: PAGE_SIZE } },
+    onSortingChange: (s) => { setSorting(s); setPage(0); },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    manualPagination: false,
   });
 
+  const totalPages = Math.ceil(filteredCalls.length / PAGE_SIZE);
+  const showing = table.getRowModel().rows.length;
+  const total = filteredCalls.length;
+  const from = page * PAGE_SIZE + 1;
+  const to = Math.min((page + 1) * PAGE_SIZE, total);
+
   function exportCsv() {
-    const rows = table.getFilteredRowModel().rows;
+    const rows = filteredCalls;
     const headers = ["Customer", "Phone", "Date", "Duration", "Disposition", "Booked", "AI Cost"];
-    const lines = rows.map((r) => {
-      const c = r.original;
-      return [
-        getCustomerName(c),
-        getCustomerPhone(c),
-        c.createdAt ? format(parseISO(c.createdAt), "yyyy-MM-dd HH:mm") : "",
-        formatDuration(getCallDuration(c)),
-        getDisp(c),
-        c.analysis?.structuredData?.appointment_booked ? "Yes" : "No",
-        `$${calcCost(getCallDuration(c)).toFixed(2)}`,
-      ].join(",");
-    });
+    const lines = rows.map((c) => [
+      getCustomerName(c),
+      getCustomerPhone(c),
+      c.createdAt ? format(parseISO(c.createdAt), "yyyy-MM-dd HH:mm") : "",
+      formatDuration(getCallDuration(c)),
+      getDispositionKey(c),
+      c.analysis?.structuredData?.appointment_booked ? "Yes" : "No",
+      `$${calcCost(getCallDuration(c)).toFixed(3)}`,
+    ].join(","));
     const csv = [headers.join(","), ...lines].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = `vapi-calls-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.href = URL.createObjectURL(blob);
+    a.download = `calls-${format(new Date(), "yyyy-MM-dd")}.csv`;
     a.click();
-    URL.revokeObjectURL(url);
+  }
+
+  function PillBtn({
+    active,
+    onClick,
+    children,
+  }: {
+    active: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+  }) {
+    return (
+      <button
+        onClick={onClick}
+        className="px-3 py-1 rounded-full text-xs font-semibold transition-all"
+        style={{
+          background: active ? "var(--accent)" : "var(--surface-2)",
+          color: active ? "#fff" : "var(--text-2)",
+          border: `1px solid ${active ? "var(--accent)" : "var(--line)"}`,
+        }}
+      >
+        {children}
+      </button>
+    );
   }
 
   return (
     <>
-      {/* Filter bar */}
-      <div className="flex items-center justify-between gap-3 mb-3">
-        <Input
-          placeholder="Search by name or number…"
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          className="max-w-xs h-8 text-sm"
-        />
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={exportCsv}
-          className="h-8 text-xs"
-        >
-          <Download className="w-3 h-3 mr-1" />
-          Export CSV
-        </Button>
+      {/* ── Filter bar ── */}
+      <div className="flex flex-col gap-3 mb-4">
+        {/* Row 1: search + export */}
+        <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-2 px-3 flex-1"
+            style={{
+              maxWidth: 320,
+              height: 36,
+              borderRadius: "var(--g-radius-pill)",
+              border: "1px solid var(--line)",
+              background: "var(--surface)",
+            }}
+          >
+            <Search size={14} style={{ color: "var(--text-4)" }} />
+            <input
+              placeholder="Search by name or number…"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+              className="flex-1 bg-transparent outline-none"
+              style={{ fontSize: 13, color: "var(--text-1)" }}
+            />
+          </div>
+          <div className="flex-1" />
+          <button
+            onClick={exportCsv}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-opacity hover:opacity-75"
+            style={{
+              border: "1px solid var(--line)",
+              background: "var(--surface)",
+              color: "var(--text-2)",
+            }}
+          >
+            <Download size={13} />
+            Export CSV
+          </button>
+        </div>
+
+        {/* Row 2: disposition pills */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <PillBtn active={dispFilter === "ALL"} onClick={() => { setDispFilter("ALL"); setPage(0); }}>
+            ALL {calls.length}
+          </PillBtn>
+          {activeKeys.map((k) => (
+            <PillBtn key={k} active={dispFilter === k} onClick={() => { setDispFilter(k); setPage(0); }}>
+              {k} {dispCounts[k]}
+            </PillBtn>
+          ))}
+          <div style={{ width: 1, height: 20, background: "var(--line)", margin: "0 4px" }} />
+          <PillBtn active={bookedOnly} onClick={() => { setBookedOnly((b) => !b); setPage(0); }}>
+            Booked only
+          </PillBtn>
+        </div>
       </div>
 
-      <div className="rounded-lg border border-gray-200 overflow-hidden">
+      {/* ── Table ── */}
+      <div
+        className="overflow-hidden"
+        style={{ border: "1px solid var(--line)", borderRadius: "var(--g-radius-md)" }}
+      >
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id} className="bg-gray-50">
+              <TableRow
+                key={hg.id}
+                style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--line)" }}
+              >
                 {hg.headers.map((h) => (
-                  <TableHead key={h.id} className="text-xs py-2 px-3">
+                  <TableHead
+                    key={h.id}
+                    className="font-semibold uppercase tracking-wider"
+                    style={{
+                      fontSize: 11,
+                      color: "var(--text-3)",
+                      letterSpacing: "0.06em",
+                      padding: "10px 14px",
+                    }}
+                  >
                     {h.isPlaceholder
                       ? null
                       : flexRender(h.column.columnDef.header, h.getContext())}
@@ -254,7 +324,8 @@ export function CallsTable({ calls }: Props) {
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="text-center text-gray-400 py-12 text-sm"
+                  className="text-center py-16"
+                  style={{ color: "var(--text-4)", fontSize: 13 }}
                 >
                   No calls found
                 </TableCell>
@@ -263,11 +334,17 @@ export function CallsTable({ calls }: Props) {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="hover:bg-gray-50 cursor-pointer"
                   onClick={() => setSelectedCall(row.original)}
+                  style={{
+                    height: "var(--row-h)",
+                    borderBottom: "1px solid var(--line-soft)",
+                    cursor: "pointer",
+                    transition: "background 0.08s",
+                  }}
+                  className="hover:bg-[var(--surface-2)]"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-2 px-3 text-sm">
+                    <TableCell key={cell.id} style={{ padding: "0 14px" }}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -278,11 +355,42 @@ export function CallsTable({ calls }: Props) {
         </Table>
       </div>
 
-      <p className="text-xs text-gray-400 mt-2">
-        {table.getFilteredRowModel().rows.length} of {calls.length} calls
-      </p>
+      {/* ── Footer / Pagination ── */}
+      <div className="flex items-center justify-between mt-3">
+        <p style={{ fontSize: 12, color: "var(--text-4)" }}>
+          {total === 0 ? "No calls" : `Showing ${from}–${to} of ${total}`}
+        </p>
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1">
+            <button
+              disabled={page === 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-opacity disabled:opacity-30"
+              style={{ border: "1px solid var(--line)", background: "var(--surface)", color: "var(--text-2)" }}
+            >
+              <ChevronLeft size={13} />
+              Prev
+            </button>
+            <span
+              className="px-3 py-1 rounded-lg font-mono"
+              style={{ fontSize: 12, color: "var(--text-2)", background: "var(--surface-2)", border: "1px solid var(--line)" }}
+            >
+              {page + 1} / {totalPages}
+            </span>
+            <button
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-opacity disabled:opacity-30"
+              style={{ border: "1px solid var(--line)", background: "var(--surface)", color: "var(--text-2)" }}
+            >
+              Next
+              <ChevronRight size={13} />
+            </button>
+          </div>
+        )}
+      </div>
 
-      <CallModal
+      <CallDetailDrawer
         call={selectedCall}
         open={!!selectedCall}
         onClose={() => setSelectedCall(null)}
