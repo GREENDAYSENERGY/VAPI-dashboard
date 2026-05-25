@@ -39,10 +39,10 @@ export function OutcomesChart({ calls }: { calls: VapiCall[] }) {
       <div className="relative shrink-0" style={{ width: 160, height: 160 }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Pie data={data} cx="50%" cy="50%" innerRadius={52} outerRadius={74} dataKey="value" strokeWidth={2} stroke="var(--surface)">
+            <Pie data={data} cx="50%" cy="50%" innerRadius={52} outerRadius={74} dataKey="value" strokeWidth={2} stroke="#ffffff">
               {data.map(e => <Cell key={e.key} fill={e.color} />)}
             </Pie>
-            <Tooltip formatter={(v) => [`${v} calls`, ""]} contentStyle={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12 }} />
+            <Tooltip formatter={(v) => [`${v} calls`, ""]} contentStyle={{ background: "#fff", border: "1px solid #e8e8e8", borderRadius: 8, fontSize: 12, color: "#1a2530", boxShadow: "0 2px 8px rgba(10,74,115,0.08)" }} />
           </PieChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">

@@ -1,0 +1,248 @@
+/* ============================================================
+   Gadi.ai — Design Tokens
+   Core palette and typography from brandbook.PNG + Flyer-1.png
+   ============================================================ */
+
+/* Official brand font — Poppins 600 (provided by user) */
+@font-face {
+  font-family: 'Poppins';
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url('fonts/Poppins_600.ttf') format('truetype');
+}
+/* Remaining weights fall back to Google Fonts — flag: only 600 was provided */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700;800&display=swap');
+
+:root {
+  /* ---------- Brand Colors (from brandbook) ---------- */
+  --brand-bg:        #ffffff;   /* Background */
+  --brand-main:      #333333;   /* Main — primary text / dark surfaces */
+  --brand-aux-1:     #fcfcfc;   /* Auxiliary 1 — off-white panels */
+  --brand-aux-2:     #0079c1;   /* Auxiliary 2 — signature Gadi blue */
+
+  /* ---------- Extended Blue Scale (derived from #0079c1) ---------- */
+  --blue-50:  #e6f2fa;
+  --blue-100: #cce5f5;
+  --blue-200: #99cbeb;
+  --blue-300: #66b1e1;
+  --blue-400: #3397d7;
+  --blue-500: #0079c1;  /* brand-aux-2 */
+  --blue-600: #00629c;
+  --blue-700: #0a4a73;  /* flyer header bg */
+  --blue-800: #073454;
+  --blue-900: #041f33;
+
+  /* ---------- Neutral Scale (derived from #333333) ---------- */
+  --neutral-0:   #ffffff;
+  --neutral-50:  #fcfcfc;   /* brand-aux-1 */
+  --neutral-100: #f5f5f5;
+  --neutral-200: #e8e8e8;
+  --neutral-300: #d1d1d1;
+  --neutral-400: #a3a3a3;
+  --neutral-500: #737373;
+  --neutral-600: #525252;
+  --neutral-700: #404040;
+  --neutral-800: #333333;   /* brand-main */
+  --neutral-900: #1a1a1a;
+
+  /* ---------- Semantic Foreground ---------- */
+  --fg-1: #333333;  /* primary text */
+  --fg-2: #525252;  /* secondary text */
+  --fg-3: #737373;  /* tertiary / captions */
+  --fg-4: #a3a3a3;  /* disabled / hints */
+  --fg-accent: #0079c1;
+  --fg-on-blue: #ffffff;
+  --fg-link: #0079c1;
+
+  /* ---------- Semantic Backgrounds ---------- */
+  --bg-1: #ffffff;  /* primary surface */
+  --bg-2: #fcfcfc;  /* secondary surface */
+  --bg-3: #f5f5f5;  /* tertiary / subtle fill */
+  --bg-dark: #0a4a73;   /* hero / header surface */
+  --bg-dark-2: #073454; /* footer / emphatic surface */
+  --bg-accent: #0079c1;
+  --bg-accent-soft: #e6f2fa;
+
+  /* ---------- Semantic Status (derived, not in brandbook — flag to user) ---------- */
+  --success: #16a34a;
+  --warning: #eab308;
+  --danger:  #dc2626;
+  --info:    #0079c1;
+
+  /* ---------- Borders ---------- */
+  --border-subtle: #e8e8e8;
+  --border-default: #d1d1d1;
+  --border-strong: #333333;
+  --border-accent: #0079c1;
+
+  /* ---------- Radii ---------- */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* ---------- Spacing (4px base) ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ---------- Shadows (subtle, brand is flat) ---------- */
+  --shadow-xs: 0 1px 2px rgba(10, 74, 115, 0.04);
+  --shadow-sm: 0 2px 4px rgba(10, 74, 115, 0.06), 0 1px 2px rgba(10, 74, 115, 0.04);
+  --shadow-md: 0 4px 12px rgba(10, 74, 115, 0.08), 0 2px 4px rgba(10, 74, 115, 0.04);
+  --shadow-lg: 0 12px 32px rgba(10, 74, 115, 0.10), 0 4px 8px rgba(10, 74, 115, 0.06);
+  --shadow-xl: 0 24px 56px rgba(10, 74, 115, 0.14);
+  --shadow-focus: 0 0 0 3px rgba(0, 121, 193, 0.25);
+
+  /* ---------- Typography families ---------- */
+  /* Poppins is the ONLY brand typeface per brandbook.
+     "Hero" is referenced for the .ai lockup but we render it with Poppins 400
+     as a near-match to keep the system single-family. Flag to user. */
+  --font-display: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans:    'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:    ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
+
+  /* ---------- Type weights ---------- */
+  --weight-light:    300;
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;  /* brand logo weight */
+  --weight-bold:     700;
+  --weight-heavy:    800;
+
+  /* ---------- Type scale (px, 1.25 modular) ---------- */
+  --text-xs:   12px;
+  --text-sm:   14px;
+  --text-base: 16px;
+  --text-md:   18px;
+  --text-lg:   20px;
+  --text-xl:   24px;
+  --text-2xl:  32px;
+  --text-3xl:  40px;
+  --text-4xl:  52px;
+  --text-5xl:  64px;
+  --text-6xl:  80px;
+
+  /* ---------- Line heights ---------- */
+  --lh-tight:   1.1;
+  --lh-snug:    1.25;
+  --lh-normal:  1.5;
+  --lh-relaxed: 1.65;
+
+  /* ---------- Letter spacing ---------- */
+  --ls-tight:  -0.02em;
+  --ls-normal:  0em;
+  --ls-wide:    0.04em;
+  --ls-wider:   0.12em;  /* for SCHEDULE A DEMO–style eyebrows */
+}
+
+/* ============================================================
+   Semantic typography styles
+   ============================================================ */
+
+.gadi-h1, h1.gadi {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-5xl);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+  color: var(--fg-1);
+  text-wrap: balance;
+}
+
+.gadi-h2, h2.gadi {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-3xl);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--ls-tight);
+  color: var(--fg-1);
+  text-wrap: balance;
+}
+
+.gadi-h3, h3.gadi {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-2xl);
+  line-height: var(--lh-snug);
+  color: var(--fg-1);
+}
+
+.gadi-h4, h4.gadi {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-xl);
+  line-height: var(--lh-snug);
+  color: var(--fg-1);
+}
+
+.gadi-eyebrow {
+  font-family: var(--font-sans);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--fg-accent);
+}
+
+.gadi-body {
+  font-family: var(--font-sans);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-base);
+  line-height: var(--lh-relaxed);
+  color: var(--fg-1);
+  text-wrap: pretty;
+}
+
+.gadi-body-lg {
+  font-family: var(--font-sans);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-md);
+  line-height: var(--lh-relaxed);
+  color: var(--fg-1);
+}
+
+.gadi-caption {
+  font-family: var(--font-sans);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-sm);
+  line-height: var(--lh-normal);
+  color: var(--fg-3);
+}
+
+.gadi-mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--fg-2);
+}
+
+.gadi-link {
+  color: var(--fg-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1.5px;
+}
+.gadi-link:hover { color: var(--blue-700); }
+
+/* ============================================================
+   Reset-ish base for previews
+   ============================================================ */
+.gadi-reset {
+  font-family: var(--font-sans);
+  color: var(--fg-1);
+  background: var(--bg-1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

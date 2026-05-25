@@ -207,28 +207,29 @@ export function AnalyticsContent({ calls, priorCalls }: Props) {
           ))}
         </div>
         <ResponsiveContainer width="100%" height={200}>
-          <AreaChart data={trendData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+          <AreaChart data={trendData} margin={{ top: 10, right: 8, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.22} />
-                <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
+                <stop offset="0%"   stopColor="#0079c1" stopOpacity={0.28} />
+                <stop offset="100%" stopColor="#0079c1" stopOpacity={0.04} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="var(--line)" />
-            <XAxis dataKey="date" tick={{ fontSize: 10, fill: "var(--text-4)" }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-            <YAxis tick={{ fontSize: 10, fill: "var(--text-4)" }} axisLine={false} tickLine={false} width={36} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e8e8e8" />
+            <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#a3a3a3" }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+            <YAxis tick={{ fontSize: 10, fill: "#a3a3a3" }} axisLine={false} tickLine={false} width={36} />
             <Tooltip
               formatter={(v) => [trendKey === "cost" && typeof v === "number" ? `$${v.toFixed(3)}` : v, TREND_LABELS[trendKey]]}
-              contentStyle={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12 }}
+              contentStyle={{ background: "#fff", border: "1px solid #e8e8e8", borderRadius: 8, fontSize: 12, color: "#1a2530", boxShadow: "0 2px 8px rgba(10,74,115,0.08)" }}
+              itemStyle={{ color: "#0079c1" }}
             />
             <Area
               type="monotone"
               dataKey={trendKey}
-              stroke="var(--accent)"
-              strokeWidth={2}
+              stroke="#0079c1"
+              strokeWidth={2.5}
               fill="url(#trendGrad)"
               dot={false}
-              activeDot={{ r: 4, fill: "var(--accent)", stroke: "var(--surface)", strokeWidth: 2 }}
+              activeDot={{ r: 5, fill: "#0079c1", stroke: "#fff", strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>

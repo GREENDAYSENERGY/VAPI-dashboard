@@ -1,5 +1,7 @@
 "use client";
 
+const DEFAULT_COLOR = "#0079c1"; // var(--accent) hardcoded — CSS vars don't resolve in SVG attributes
+
 interface Props {
   data: number[];
   color?: string;
@@ -7,7 +9,7 @@ interface Props {
   height?: number;
 }
 
-export function Sparkline({ data, color = "var(--accent)", width = 70, height = 28 }: Props) {
+export function Sparkline({ data, color = DEFAULT_COLOR, width = 70, height = 28 }: Props) {
   if (!data || data.length < 2) return null;
 
   const max = Math.max(...data, 1);
@@ -22,24 +24,22 @@ export function Sparkline({ data, color = "var(--accent)", width = 70, height = 
 
   const polyline = pts.join(" ");
   const area = `${pts[0]} ${pts.join(" ")} ${width},${height} 0,${height}`;
+  const gradId = `sg-${color.replace(/[^a-z0-9]/gi, "")}`;
 
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: "visible" }}>
       <defs>
-        <linearGradient id={`sg-${color.replace(/[^a-z]/gi, "")}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor={color} stopOpacity={0.3} />
+          <stop offset="100%" stopColor={color} stopOpacity={0} />
         </linearGradient>
       </defs>
-      <polygon
-        points={area}
-        fill={`url(#sg-${color.replace(/[^a-z]/gi, "")})`}
-      />
+      <polygon points={area} fill={`url(#${gradId})`} />
       <polyline
         points={polyline}
         fill="none"
         stroke={color}
-        strokeWidth={1.5}
+        strokeWidth={2}
         strokeLinejoin="round"
         strokeLinecap="round"
       />

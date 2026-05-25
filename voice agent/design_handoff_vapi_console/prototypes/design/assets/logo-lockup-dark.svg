@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 120" width="420" height="120">
+  <g transform="translate(10,8)">
+    
+<circle cx="60" cy="12" r="6" fill="#0079c1"></circle>
+<circle cx="42" cy="30" r="6" fill="#0079c1"></circle>
+<circle cx="60" cy="30" r="6" fill="#0079c1"></circle>
+<circle cx="78" cy="30" r="6" fill="#0079c1"></circle>
+<circle cx="24" cy="48" r="6" fill="#0079c1"></circle>
+<circle cx="42" cy="48" r="6" fill="#0079c1"></circle>
+<circle cx="60" cy="48" r="6" fill="#0079c1"></circle>
+<circle cx="78" cy="48" r="6" fill="#0079c1"></circle>
+<circle cx="96" cy="48" r="6" fill="#0079c1"></circle>
+<circle cx="24" cy="66" r="6" fill="#0079c1"></circle>
+<circle cx="42" cy="66" r="6" fill="#0079c1"></circle>
+<circle cx="60" cy="66" r="6" fill="#0079c1"></circle>
+<circle cx="78" cy="66" r="6" fill="#0079c1"></circle>
+<circle cx="96" cy="66" r="6" fill="#0079c1"></circle>
+<circle cx="24" cy="84" r="6" fill="#0079c1"></circle>
+<circle cx="42" cy="84" r="6" fill="#0079c1"></circle>
+<circle cx="60" cy="84" r="6" fill="#0079c1"></circle>
+<circle cx="78" cy="84" r="6" fill="#0079c1"></circle>
+<circle cx="96" cy="84" r="6" fill="#0079c1"></circle>
+
+  </g>
+  <text x="140" y="82" font-family="Poppins, system-ui, sans-serif" font-weight="600" font-size="72" fill="#333333">Gadi<tspan fill="#0079c1">.ai</tspan></text>
+</svg>
