@@ -270,16 +270,15 @@ export default async function OverviewPage() {
         </Card>
       </div>
 
-      {/* ── Row: Recent activity + Heatmap ────────────────────────────────── */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: "2fr 1fr" }}>
-        <Card title="Recent Activity">
-          <OverviewActivitySection calls={calls.slice(0, 8)} />
-        </Card>
+      {/* ── Recent Activity (full width) ──────────────────────────────────── */}
+      <Card title="Recent Activity">
+        <OverviewActivitySection calls={calls.slice(0, 8)} />
+      </Card>
 
-        <Card title="Call Volume Heatmap">
-          <HourlyHeatmap calls={calls} />
-        </Card>
-      </div>
+      {/* ── Call Volume Heatmap (full width, bottom) ───────────────────────── */}
+      <Card title="Call Volume Heatmap">
+        <HourlyHeatmap calls={calls} />
+      </Card>
 
     </div>
   );
