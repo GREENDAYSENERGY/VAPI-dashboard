@@ -28,6 +28,7 @@ import {
   getMessages,
   getRecordingUrl,
   getDispositionKey,
+  getStructuredOutput,
 } from "@/lib/vapi";
 import { calcCost, formatDuration } from "@/lib/pricing";
 import { format, parseISO } from "date-fns";
@@ -271,13 +272,13 @@ export function CallDetailDrawer({ call, open, onClose }: Props) {
               {customerName}
             </SheetTitle>
             <CallDispositionChip call={call} />
-            {call.analysis?.structuredData?.appointment_booked && (
+            {getStructuredOutput(call)?.hand_off && (
               <span
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full"
                 style={{ background: "var(--pos-soft)", color: "var(--pos)", fontSize: 11, fontWeight: 600 }}
               >
                 <CheckCircle size={11} />
-                Booked
+                Hand-off Scheduled
               </span>
             )}
           </div>
@@ -295,7 +296,7 @@ export function CallDetailDrawer({ call, open, onClose }: Props) {
         </SheetHeader>
 
         {/* ── 2. AI Summary ── */}
-        {call.analysis?.summary && (
+        {(getStructuredOutput(call)?.summary ?? call.analysis?.summary) && (
           <Section icon={<Sparkles size={15} />} title="AI Summary">
             <div
               className="p-3 rounded-xl text-sm leading-relaxed"
@@ -305,7 +306,7 @@ export function CallDetailDrawer({ call, open, onClose }: Props) {
                 color: "var(--text-1)",
               }}
             >
-              {call.analysis.summary}
+              {getStructuredOutput(call)?.summary ?? call.analysis?.summary}
             </div>
           </Section>
         )}
@@ -318,34 +319,42 @@ export function CallDetailDrawer({ call, open, onClose }: Props) {
         )}
 
         {/* ── 4. Structured Data ── */}
-        <Section icon={<Tag size={15} />} title="Call Details">
-          <div
-            className="rounded-xl overflow-hidden"
-            style={{ border: "1px solid var(--line)" }}
-          >
-            <div style={{ padding: "4px 12px" }}>
-              <KV
-                label="Disposition"
-                value={<CallDispositionChip call={call} />}
-              />
-              <KV
-                label="Appointment booked"
-                value={
-                  call.analysis?.structuredData?.appointment_booked === true
-                    ? "Yes ✓"
-                    : call.analysis?.structuredData?.appointment_booked === false
-                    ? "No"
-                    : "—"
-                }
-              />
-              <KV
-                label="Success eval"
-                value={call.analysis?.successEvaluation ?? "—"}
-              />
-              <KV label="Ended reason" value={call.endedReason ?? "—"} />
-            </div>
-          </div>
-        </Section>
+        {(() => {
+          const so = getStructuredOutput(call);
+          const DISP_LABEL: Record<string, string> = {
+            HAND_OFF: "Hand-off Scheduled",
+            HUNG_UP: "Hung Up",
+            VM: "Voicemail",
+            NA: "No Answer",
+            BUSY_TONE: "Busy Tone",
+            NO_CONN: "No Connection",
+            TIMEOUT: "Timeout",
+            ROBO_KILL: "Call Ended by Bot",
+            DNC: "Do Not Call",
+            DISQUALIFIED: "Disqualified",
+          };
+          const fmt = (v: boolean | null | undefined) =>
+            v === true ? "Yes" : v === false ? "No" : "—";
+
+          return (
+            <Section icon={<Tag size={15} />} title="Call Details">
+              <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--line)" }}>
+                <div style={{ padding: "4px 12px" }}>
+                  <KV label="Disposition" value={<CallDispositionChip call={call} />} />
+                  {so?.callDisposition && (
+                    <KV label="Call outcome" value={DISP_LABEL[so.callDisposition] ?? so.callDisposition} />
+                  )}
+                  <KV label="Hand-off scheduled" value={fmt(so?.hand_off)} />
+                  <KV label="Interested in follow-up" value={fmt(so?.interestedInExpertFollowup)} />
+                  {so?.areHappyWithSolar !== null && so?.areHappyWithSolar !== undefined && (
+                    <KV label="Happy with solar" value={fmt(so.areHappyWithSolar)} />
+                  )}
+                  <KV label="Ended reason" value={call.endedReason ?? "—"} />
+                </div>
+              </div>
+            </Section>
+          );
+        })()}
 
         {/* ── 5. Transcript ── */}
         {(messages.length > 0 || transcript) && (

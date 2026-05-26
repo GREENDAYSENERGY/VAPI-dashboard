@@ -11,6 +11,21 @@ export interface VapiMessage {
   source?: string;
 }
 
+export interface VapiStructuredOutputResult {
+  callDisposition?: string;
+  name?: string;
+  lastName?: string;
+  phone?: string;
+  date?: string;
+  start?: string;
+  end?: string;
+  summary?: string;
+  hand_off?: boolean;
+  areHappyWithSolar?: boolean | null;
+  interestedInExpertFollowup?: boolean | null;
+  [key: string]: unknown;
+}
+
 export interface VapiCall {
   id: string;
   assistantId?: string;
@@ -71,6 +86,10 @@ export interface VapiCall {
       };
     };
     messages?: VapiMessage[];
+    structuredOutputs?: Record<string, {
+      name?: string;
+      result?: VapiStructuredOutputResult;
+    }>;
   };
 
   webCallUrl?: string;
@@ -145,7 +164,32 @@ export interface VapiCampaign {
 
 // ─── Call Helpers ─────────────────────────────────────────────────────────────
 
+/** Returns the first structured output result across all schema IDs */
+export function getStructuredOutput(call: VapiCall): VapiStructuredOutputResult | null {
+  const outputs = call.artifact?.structuredOutputs;
+  if (!outputs) return null;
+  const values = Object.values(outputs);
+  return (values[0]?.result as VapiStructuredOutputResult) ?? null;
+}
+
 export function getDispositionKey(call: VapiCall): string {
+  // Prefer structured output callDisposition
+  const so = getStructuredOutput(call);
+  if (so?.callDisposition) {
+    switch (so.callDisposition.toUpperCase()) {
+      case "HAND_OFF":    return "BOOKED";
+      case "VM":          return "VM";
+      case "DNC":         return "DNC";
+      case "DISQUALIFIED":return "NQ";
+      case "NA":
+      case "BUSY_TONE":
+      case "NO_CONN":     return "NO_ANSWER";
+      case "TIMEOUT":
+      case "ROBO_KILL":
+      case "HUNG_UP":     return "COMPLETED";
+    }
+  }
+  // Legacy fallback
   const d = call.analysis?.structuredData?.disposition;
   if (d) {
     const upper = d.toUpperCase();
