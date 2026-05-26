@@ -199,7 +199,8 @@ export function getDispositionKey(call: VapiCall): string {
   if (call.analysis?.structuredData?.appointment_booked) return "BOOKED";
   const r = (call.endedReason ?? "").toLowerCase();
   if (r.includes("voicemail") || r.includes("machine")) return "VM";
-  if (r.includes("no-answer") || r.includes("busy")) return "NO_ANSWER";
+  if (r.includes("no-answer") || r.includes("not-answer") || r.includes("did-not-answer") || r.includes("busy")) return "NO_ANSWER";
+  if (r.includes("silence")) return "NO_ANSWER";
   if (r.includes("customer-ended") || r.includes("assistant-ended")) return "COMPLETED";
   if (r.includes("do-not-call") || r.includes("dnc")) return "DNC";
   return "OTHER";

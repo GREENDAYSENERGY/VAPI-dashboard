@@ -344,9 +344,13 @@ export function CallDetailDrawer({ call, open, onClose }: Props) {
                   {so?.callDisposition && (
                     <KV label="Call outcome" value={DISP_LABEL[so.callDisposition] ?? so.callDisposition} />
                   )}
-                  <KV label="Hand-off scheduled" value={fmt(so?.hand_off)} />
-                  <KV label="Interested in follow-up" value={fmt(so?.interestedInExpertFollowup)} />
-                  {so?.areHappyWithSolar !== null && so?.areHappyWithSolar !== undefined && (
+                  {so?.hand_off !== undefined && so.hand_off !== null && (
+                    <KV label="Hand-off scheduled" value={fmt(so.hand_off)} />
+                  )}
+                  {so?.interestedInExpertFollowup !== undefined && so.interestedInExpertFollowup !== null && (
+                    <KV label="Interested in follow-up" value={fmt(so.interestedInExpertFollowup)} />
+                  )}
+                  {so?.areHappyWithSolar !== undefined && so?.areHappyWithSolar !== null && (
                     <KV label="Happy with solar" value={fmt(so.areHappyWithSolar)} />
                   )}
                   <KV label="Ended reason" value={call.endedReason ?? "—"} />
