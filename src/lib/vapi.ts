@@ -292,7 +292,7 @@ export async function getCall(id: string): Promise<VapiCall | null> {
   return res.json();
 }
 
-export async function getCampaigns(): Promise<VapiCampaign[]> {
+export async function getCampaigns(assistantId?: string): Promise<VapiCampaign[]> {
   const res = await fetch(`${VAPI_BASE}/campaign?limit=100`, {
     headers: vapiHeaders(),
     next: { revalidate: 60, tags: ["vapi-campaigns"] },
@@ -302,7 +302,10 @@ export async function getCampaigns(): Promise<VapiCampaign[]> {
     return [];
   }
   const data = await res.json();
-  const results: VapiCampaign[] = Array.isArray(data) ? data : (data.results ?? data.data ?? []);
+  let results: VapiCampaign[] = Array.isArray(data) ? data : (data.results ?? data.data ?? []);
+  if (assistantId) {
+    results = results.filter((c) => c.assistantId === assistantId);
+  }
   return results.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 

@@ -5,7 +5,7 @@ import { Megaphone } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function CampaignsPage() {
-  const campaigns = await getCampaigns();
+  const campaigns = await getCampaigns(process.env.VAPI_ASSISTANT_ID || undefined);
 
   const total = campaigns.length;
   const totalScheduled = campaigns.reduce((s, c) => s + (c.callsCounterScheduled ?? 0), 0);
