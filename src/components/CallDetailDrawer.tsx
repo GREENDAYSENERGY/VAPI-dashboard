@@ -290,7 +290,6 @@ export function CallDetailDrawer({ call, open, onClose }: Props) {
             {customerPhone !== "—" && <span>📞 {customerPhone}</span>}
             <span>📅 {createdDisplay}</span>
             <span>⏱ {formatDuration(duration)}</span>
-            {call.assistantId && <span>🤖 {call.assistantId.slice(0, 8)}…</span>}
             <span>💵 ${aiCost.toFixed(3)}</span>
           </div>
         </SheetHeader>
@@ -344,13 +343,6 @@ export function CallDetailDrawer({ call, open, onClose }: Props) {
                 value={call.analysis?.successEvaluation ?? "—"}
               />
               <KV label="Ended reason" value={call.endedReason ?? "—"} />
-              <KV label="Call ID" value={<span style={{ fontFamily: "var(--font-mono)", fontSize: 11 }}>{call.id}</span>} />
-              {call.assistantId && (
-                <KV
-                  label="Assistant ID"
-                  value={<span style={{ fontFamily: "var(--font-mono)", fontSize: 11 }}>{call.assistantId}</span>}
-                />
-              )}
             </div>
           </div>
         </Section>
