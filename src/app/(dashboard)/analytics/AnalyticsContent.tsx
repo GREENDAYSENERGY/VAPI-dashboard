@@ -135,7 +135,7 @@ export function AnalyticsContent({ calls, priorCalls }: Props) {
   const TREND_LABELS: Record<TrendKey, string> = { calls: "Calls", bookings: "Bookings", cost: "Cost ($)" };
 
   return (
-    <div style={{ padding: "var(--card-p)", maxWidth: 1280 }} className="space-y-5">
+    <div style={{ padding: "var(--card-p)" }} className="space-y-5">
       {/* Page header */}
       <div className="flex items-center gap-3 mb-2">
         <span style={{ color: "var(--accent)" }}><Brain size={22} /></span>

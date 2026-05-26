@@ -14,7 +14,7 @@ export interface VapiMessage {
 export interface VapiCall {
   id: string;
   assistantId?: string;
-  type?: string; // "webCall" | "inboundPhoneCall" | "outboundPhoneCall"
+  type?: string;
   status?: string;
   endedReason?: string;
 
@@ -23,7 +23,6 @@ export interface VapiCall {
   endedAt?: string;
   updatedAt?: string;
 
-  // Cost
   cost?: number;
   costBreakdown?: {
     transport?: number;
@@ -37,26 +36,18 @@ export interface VapiCall {
     ttsCharacters?: number;
   };
 
-  // Transcript (top-level plain text)
   transcript?: string;
-
-  // Recording URLs (top-level shortcuts)
   recordingUrl?: string;
   stereoRecordingUrl?: string;
-
-  // Messages (top-level array)
   messages?: VapiMessage[];
 
-  // Customer info (populated for phone calls, empty for web calls)
   customer?: {
     number?: string;
     name?: string;
   } | string;
 
-  // Phone number info
   phoneNumber?: string | { number?: string; name?: string };
 
-  // Analysis (may be empty)
   analysis?: {
     summary?: string;
     successEvaluation?: string;
@@ -67,7 +58,6 @@ export interface VapiCall {
     };
   };
 
-  // Artifact (mirrors top-level fields + structured recording URLs)
   artifact?: {
     transcript?: string;
     recordingUrl?: string;
@@ -83,10 +73,8 @@ export interface VapiCall {
     messages?: VapiMessage[];
   };
 
-  // Web call
   webCallUrl?: string;
 
-  // Variable values passed to the assistant (name, phone, address, city)
   assistantOverrides?: {
     variableValues?: {
       name?: string;
@@ -98,16 +86,65 @@ export interface VapiCall {
     [key: string]: unknown;
   };
 
-  // Legacy / not always populated
   durationSeconds?: number;
   summary?: string;
   metadata?: string;
 }
 
-/**
- * Get a normalized disposition key for a call.
- * Returns: BOOKED | CB | VM | DNC | NQ | NO_ANSWER | COMPLETED | OTHER
- */
+// ─── Campaign Types ────────────────────────────────────────────────────────────
+
+export interface VapiCampaignCall {
+  id: string;
+  status?: string;
+  endedReason?: string;
+  startedAt?: string;
+  endedAt?: string;
+  analysis?: {
+    summary?: string;
+    successEvaluation?: string;
+    structuredData?: {
+      appointment_booked?: boolean;
+      disposition?: string;
+      [key: string]: unknown;
+    };
+  };
+  customer?: {
+    number?: string;
+    name?: string;
+    assistantOverrides?: {
+      variableValues?: {
+        name?: string;
+        phone?: string;
+        address?: string;
+        city?: string;
+        zip?: number | string;
+        "last-name"?: string;
+        [key: string]: unknown;
+      };
+    };
+  };
+}
+
+export interface VapiCampaign {
+  id: string;
+  name: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  endedReason?: string;
+  assistantId?: string;
+  phoneNumberId?: string;
+  callsCounterScheduled?: number;
+  callsCounterQueued?: number;
+  callsCounterInProgress?: number;
+  callsCounterEnded?: number;
+  callsCounterEndedVoicemail?: number;
+  customers?: Array<{ number?: string; name?: string }>;
+  calls?: Record<string, string>; // values are JSON strings — use parseCampaignCalls()
+}
+
+// ─── Call Helpers ─────────────────────────────────────────────────────────────
+
 export function getDispositionKey(call: VapiCall): string {
   const d = call.analysis?.structuredData?.disposition;
   if (d) {
@@ -124,7 +161,6 @@ export function getDispositionKey(call: VapiCall): string {
   return "OTHER";
 }
 
-/** Calculate duration in seconds from startedAt / endedAt */
 export function getCallDuration(call: VapiCall): number {
   if (call.durationSeconds) return call.durationSeconds;
   if (call.startedAt && call.endedAt) {
@@ -135,21 +171,15 @@ export function getCallDuration(call: VapiCall): number {
   return 0;
 }
 
-/** Get customer display name — works for phone calls and web calls */
 export function getCustomerName(call: VapiCall): string {
-  // Variable values passed to assistant (e.g. {{name}})
   const vars = call.assistantOverrides?.variableValues;
   if (vars?.name) return vars.name;
-
-  // Phone call customer object
   if (call.customer && typeof call.customer === "object") {
     return call.customer.name ?? call.customer.number ?? "—";
   }
-
   return "Web Call";
 }
 
-/** Get customer phone number */
 export function getCustomerPhone(call: VapiCall): string {
   const vars = call.assistantOverrides?.variableValues;
   if (vars?.phone) return String(vars.phone);
@@ -159,12 +189,10 @@ export function getCustomerPhone(call: VapiCall): string {
   return "—";
 }
 
-/** Get the plain-text transcript regardless of where VAPI puts it */
 export function getTranscript(call: VapiCall): string {
   return call.transcript ?? call.artifact?.transcript ?? "";
 }
 
-/** Get messages array */
 export function getMessages(call: VapiCall): VapiMessage[] {
   return (
     call.messages?.filter((m) => m.role === "user" || m.role === "bot" || m.role === "assistant") ??
@@ -173,13 +201,39 @@ export function getMessages(call: VapiCall): VapiMessage[] {
   );
 }
 
-/** Get best recording URL */
 export function getRecordingUrl(call: VapiCall): string | undefined {
   return (
     call.artifact?.recording?.mono?.combinedUrl ??
     call.recordingUrl ??
     call.artifact?.recordingUrl
   );
+}
+
+// ─── Campaign Helpers ─────────────────────────────────────────────────────────
+
+export function parseCampaignCalls(campaign: VapiCampaign): VapiCampaignCall[] {
+  if (!campaign.calls) return [];
+  return Object.values(campaign.calls).map((raw) => {
+    try { return JSON.parse(raw) as VapiCampaignCall; } catch { return null; }
+  }).filter(Boolean) as VapiCampaignCall[];
+}
+
+export function getCampaignCallName(call: VapiCampaignCall): string {
+  const vars = call.customer?.assistantOverrides?.variableValues;
+  if (vars?.name) {
+    const last = vars["last-name"] ? ` ${vars["last-name"]}` : "";
+    return `${vars.name}${last}`;
+  }
+  return call.customer?.name ?? call.customer?.number ?? "—";
+}
+
+export function getCampaignCallDuration(call: VapiCampaignCall): number {
+  if (call.startedAt && call.endedAt) {
+    return Math.max(0, Math.round(
+      (new Date(call.endedAt).getTime() - new Date(call.startedAt).getTime()) / 1000
+    ));
+  }
+  return 0;
 }
 
 // ─── API Client ───────────────────────────────────────────────────────────────
@@ -217,7 +271,7 @@ export async function getCalls(params: GetCallsParams = {}): Promise<VapiCall[]>
   const url = `${VAPI_BASE}/call${qs ? `?${qs}` : ""}`;
   const res = await fetch(url, {
     headers: vapiHeaders(),
-    next: { revalidate: 30 },
+    next: { revalidate: 60, tags: ["vapi-calls"] },
   });
 
   if (!res.ok) {
@@ -231,6 +285,29 @@ export async function getCalls(params: GetCallsParams = {}): Promise<VapiCall[]>
 
 export async function getCall(id: string): Promise<VapiCall | null> {
   const res = await fetch(`${VAPI_BASE}/call/${id}`, {
+    headers: vapiHeaders(),
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function getCampaigns(): Promise<VapiCampaign[]> {
+  const res = await fetch(`${VAPI_BASE}/campaign?limit=100`, {
+    headers: vapiHeaders(),
+    next: { revalidate: 60, tags: ["vapi-campaigns"] },
+  });
+  if (!res.ok) {
+    console.error("VAPI getCampaigns error:", res.status, await res.text());
+    return [];
+  }
+  const data = await res.json();
+  const results: VapiCampaign[] = Array.isArray(data) ? data : (data.results ?? data.data ?? []);
+  return results.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export async function getCampaign(id: string): Promise<VapiCampaign | null> {
+  const res = await fetch(`${VAPI_BASE}/campaign/${id}`, {
     headers: vapiHeaders(),
     cache: "no-store",
   });

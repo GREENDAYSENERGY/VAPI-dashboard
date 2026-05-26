@@ -2,7 +2,7 @@ import { getCalls } from "@/lib/vapi";
 import { CallsTable } from "@/components/CallsTable";
 import { subDays } from "date-fns";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 interface Props {
   searchParams: Promise<{ from?: string; to?: string }>;
@@ -21,7 +21,7 @@ export default async function CallsPage({ searchParams }: Props) {
   });
 
   return (
-    <div style={{ padding: "var(--card-p)", maxWidth: 1200 }}>
+    <div style={{ padding: "var(--card-p)" }}>
       {/* Page header */}
       <div className="mb-6">
         <h1

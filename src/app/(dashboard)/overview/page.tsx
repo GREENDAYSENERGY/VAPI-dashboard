@@ -8,7 +8,8 @@ import { OverviewActivitySection } from "@/components/OverviewActivitySection";
 import { Phone, Percent, CalendarCheck, Clock } from "lucide-react";
 import { subDays, format } from "date-fns";
 
-export const dynamic = "force-dynamic";
+// Pages revalidate automatically via the vapi-calls webhook tag
+export const revalidate = 60; // fallback: refresh every 60s even without webhook
 
 function pct(n: number, d: number) {
   return d === 0 ? 0 : Math.round((n / d) * 100);

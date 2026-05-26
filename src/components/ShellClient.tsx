@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Radio, List, Activity, Wallet,
   Bot, Phone, Users, Settings, HelpCircle,
-  LogOut, Bell, ChevronDown, Search,
+  LogOut, Bell, ChevronDown, Search, Megaphone,
 } from "lucide-react";
 
 interface Props {
@@ -35,11 +35,12 @@ function Sidebar({ isGadiUser, email }: { isGadiUser: boolean; email: string }) 
   const pathname = usePathname();
 
   const ops: NavItem[] = [
-    { href: "/overview",  label: "Overview",      Icon: LayoutDashboard },
-    { href: "/live",      label: "Live Calls",    Icon: Radio, live: true },
-    { href: "/calls",     label: "Call Logs",     Icon: List },
+    { href: "/overview",   label: "Overview",    Icon: LayoutDashboard },
+    { href: "/live",       label: "Live Calls",  Icon: Radio, live: true },
+    { href: "/calls",      label: "Call Logs",   Icon: List },
+    { href: "/campaigns",  label: "Campaigns",   Icon: Megaphone },
     ...(isGadiUser ? [{ href: "/analytics", label: "Analytics", Icon: Activity }] : []),
-    { href: "/billing",   label: "Billing",       Icon: Wallet },
+    { href: "/billing",    label: "Billing",     Icon: Wallet },
   ];
   const configItems: NavItem[] = [
     { href: "#", label: "Assistant",     Icon: Bot },
@@ -281,6 +282,7 @@ function pathToLabel(pathname: string): string {
   if (pathname.startsWith("/overview") || pathname.startsWith("/dashboard")) return "Overview";
   if (pathname.startsWith("/live")) return "Live Calls";
   if (pathname.startsWith("/calls")) return "Call Logs";
+  if (pathname.startsWith("/campaigns")) return "Campaigns";
   if (pathname.startsWith("/analytics") || pathname.startsWith("/pricing")) return "Analytics";
   if (pathname.startsWith("/billing")) return "Billing";
   return "Dashboard";
