@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Radio, List, Activity, Wallet,
   Bot, Phone, Users, Settings, HelpCircle,
@@ -231,20 +232,7 @@ function Topbar({ email }: { email: string }) {
       </div>
 
       {/* Live ticker */}
-      <Link
-        href="/live"
-        className="flex items-center gap-1.5 px-3 whitespace-nowrap shrink-0 transition-colors"
-        style={{
-          height: 34, borderRadius: "var(--g-radius-pill)",
-          background: "var(--surface-3)", border: "1px solid var(--line)",
-          fontSize: 12, color: "var(--text-2)", textDecoration: "none",
-        }}
-      >
-        <span style={{ width: 7, height: 7, borderRadius: 999, background: "var(--pos)", animation: "livePulse 1.6s ease-in-out infinite", display: "inline-block", flexShrink: 0 }} />
-        <span><b style={{ color: "var(--text-1)" }}>0</b> live</span>
-        <span style={{ width: 4, height: 4, borderRadius: 999, background: "var(--line-strong)", display: "inline-block" }} />
-        <span>Today <b style={{ color: "var(--text-1)" }}>$0</b></span>
-      </Link>
+      <LiveTicker />
 
       {/* Divider */}
       <div className="shrink-0" style={{ width: 1, height: 22, background: "var(--line-strong)" }} />
@@ -275,6 +263,45 @@ function Topbar({ email }: { email: string }) {
         <ChevronDown size={12} className="shrink-0" style={{ color: "var(--text-3)" }} />
       </div>
     </header>
+  );
+}
+
+function LiveTicker() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchLive() {
+      try {
+        const res = await fetch("/api/live");
+        if (res.ok) {
+          const data = await res.json();
+          setCount(Array.isArray(data) ? data.length : 0);
+        }
+      } catch { /* ignore */ }
+    }
+    fetchLive();
+    const id = setInterval(fetchLive, 15000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <Link
+      href="/live"
+      className="flex items-center gap-1.5 px-3 whitespace-nowrap shrink-0 transition-colors"
+      style={{
+        height: 34, borderRadius: "var(--g-radius-pill)",
+        background: "var(--surface-3)", border: "1px solid var(--line)",
+        fontSize: 12, color: "var(--text-2)", textDecoration: "none",
+      }}
+    >
+      <span style={{
+        width: 7, height: 7, borderRadius: 999,
+        background: count > 0 ? "var(--pos)" : "var(--text-4)",
+        animation: count > 0 ? "livePulse 1.6s ease-in-out infinite" : "none",
+        display: "inline-block", flexShrink: 0,
+      }} />
+      <span><b style={{ color: count > 0 ? "var(--pos)" : "var(--text-1)" }}>{count}</b> live</span>
+    </Link>
   );
 }
 
