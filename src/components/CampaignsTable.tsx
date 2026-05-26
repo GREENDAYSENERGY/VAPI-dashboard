@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
-import { ChevronDown, ChevronRight, Phone, Clock, CheckCircle, VoicemailIcon, XCircle, Loader2 } from "lucide-react";
-import type { VapiCampaign, VapiCampaignCall } from "@/lib/vapi";
+import { ChevronDown, ChevronRight, Phone, Clock, CheckCircle, VoicemailIcon, Loader2 } from "lucide-react";
+import type { VapiCampaign, VapiCampaignCall, VapiCall } from "@/lib/vapi";
 import { getCampaignCallName, getCampaignCallDuration, parseCampaignCalls } from "@/lib/vapi";
 import { formatDuration } from "@/lib/pricing";
+import { CallDetailDrawer } from "@/components/CallDetailDrawer";
 
 interface Props {
   campaigns: VapiCampaign[];
@@ -42,7 +43,13 @@ function statusBadge(status: string) {
 
 // ── Expanded row ───────────────────────────────────────────────────────────────
 
-function CampaignCallsRow({ campaignId }: { campaignId: string }) {
+function CampaignCallsRow({
+  campaignId,
+  onOpenCall,
+}: {
+  campaignId: string;
+  onOpenCall: (callId: string) => void;
+}) {
   const [calls, setCalls] = useState<VapiCampaignCall[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetched, setFetched] = useState(false);
@@ -86,14 +93,13 @@ function CampaignCallsRow({ campaignId }: { campaignId: string }) {
     <tr>
       <td colSpan={7} style={{ padding: 0, background: "var(--surface-2)" }}>
         <table className="w-full" style={{ fontSize: 12, borderCollapse: "collapse" }}>
-          {/* Sub-header */}
           <thead>
             <tr style={{ borderBottom: "1px solid var(--line)" }}>
-              {["Customer", "Phone", "Duration", "Outcome", "Date"].map((h) => (
+              {["Customer", "Phone", "Duration", "Outcome", "Date", ""].map((h, i) => (
                 <th
-                  key={h}
+                  key={i}
                   className="text-left font-semibold uppercase tracking-wider"
-                  style={{ padding: "8px 14px 8px", fontSize: 10, color: "var(--text-4)", letterSpacing: "0.08em" }}
+                  style={{ padding: "8px 14px", fontSize: 10, color: "var(--text-4)", letterSpacing: "0.08em" }}
                 >
                   {h}
                 </th>
@@ -113,7 +119,11 @@ function CampaignCallsRow({ campaignId }: { campaignId: string }) {
               return (
                 <tr
                   key={call.id}
+                  className="cursor-pointer transition-colors"
                   style={{ borderBottom: "1px solid var(--line-soft)" }}
+                  onClick={() => onOpenCall(call.id)}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--surface-3)"}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ""}
                 >
                   <td style={{ padding: "9px 14px", color: "var(--text-1)", fontWeight: 500 }}>
                     {name}
@@ -142,6 +152,9 @@ function CampaignCallsRow({ campaignId }: { campaignId: string }) {
                   <td style={{ padding: "9px 14px", color: "var(--text-3)" }}>
                     {date}
                   </td>
+                  <td style={{ padding: "9px 14px", color: "var(--text-4)", textAlign: "right" }}>
+                    <span style={{ fontSize: 16 }}>›</span>
+                  </td>
                 </tr>
               );
             })}
@@ -156,6 +169,8 @@ function CampaignCallsRow({ campaignId }: { campaignId: string }) {
 
 export function CampaignsTable({ campaigns }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [selectedCall, setSelectedCall] = useState<VapiCall | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   function toggle(id: string) {
     setExpanded((prev) => {
@@ -166,7 +181,24 @@ export function CampaignsTable({ campaigns }: Props) {
     });
   }
 
+  async function openCall(callId: string) {
+    try {
+      const res = await fetch(`/api/calls/${callId}`);
+      if (res.ok) {
+        const call: VapiCall = await res.json();
+        setSelectedCall(call);
+        setDrawerOpen(true);
+      }
+    } catch { /* ignore */ }
+  }
+
   return (
+    <>
+    <CallDetailDrawer
+      call={selectedCall}
+      open={drawerOpen}
+      onClose={() => { setDrawerOpen(false); setSelectedCall(null); }}
+    />
     <div
       className="rounded-xl overflow-hidden"
       style={{ border: "1px solid var(--line)", background: "var(--surface)", boxShadow: "var(--shadow-xs)" }}
@@ -283,7 +315,7 @@ export function CampaignsTable({ campaigns }: Props) {
                   </tr>
 
                   {/* Expanded calls */}
-                  {isOpen && <CampaignCallsRow key={`${c.id}-calls`} campaignId={c.id} />}
+                  {isOpen && <CampaignCallsRow key={`${c.id}-calls`} campaignId={c.id} onOpenCall={openCall} />}
                 </>
               );
             })}
@@ -291,5 +323,6 @@ export function CampaignsTable({ campaigns }: Props) {
         </table>
       </div>
     </div>
+    </>
   );
 }
