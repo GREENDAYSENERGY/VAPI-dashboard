@@ -84,7 +84,7 @@ function KV({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 // ─── Audio player ─────────────────────────────────────────────────────────────
-function AudioPlayer({ url }: { url: string }) {
+function AudioPlayer({ url, callId }: { url: string; callId: string }) {
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -158,8 +158,8 @@ function AudioPlayer({ url }: { url: string }) {
       </div>
 
       <a
-        href={url}
-        download
+        href={`/api/recording?url=${encodeURIComponent(url)}&name=call-${callId.slice(0, 8)}.wav`}
+        download={`call-${callId.slice(0, 8)}.wav`}
         className="shrink-0 rounded-lg p-1.5 transition-colors hover:opacity-70"
         style={{ color: "var(--text-3)" }}
         title="Download recording"
@@ -314,7 +314,7 @@ export function CallDetailDrawer({ call, open, onClose }: Props) {
         {/* ── 3. Recording ── */}
         {recordingUrl && (
           <Section icon={<Headphones size={15} />} title="Recording">
-            <AudioPlayer url={recordingUrl} />
+            <AudioPlayer url={recordingUrl} callId={call.id} />
           </Section>
         )}
 
